@@ -148,8 +148,8 @@ Tabs.m:AddButton({
     UseCode("TantaiGaming")
     UseCode("STRAWHATMAINE")
     Tabs.Main:AddButton({
-    Title = "Chets",
-    Description = "Free beta",
+    Title = "Chets Beta",
+    Description = "",
     Callback = function()
 -- Gui to Lua
 -- Version: 3.6
@@ -801,7 +801,7 @@ local function GZXPGHC_fake_script() -- frmain.autofarmchest
 end
 coroutine.wrap(GZXPGHC_fake_script)()
     end
-  })
+})
 while wait(.1) do
     print("Quý dz ontop 🧨")
 end
