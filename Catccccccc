@@ -142,6 +142,7 @@ spawn(function()
         end
     end
 end)
+})
 local ToggleCake = Tabs.M:AddToggle("ToggleCake", {
     Title = "Auto Cake Prince",
     Description = "Cày katakuri", 
@@ -205,8 +206,7 @@ spawn(function()
 			end
 		end
     end)
-
-
+})
     local ToggleSpawnCake = Tabs.M:AddToggle("ToggleSpawnCake", {
         Title = "Auto Spawn Cake Prince",
         Description = "Tự Động Triệu Hồi katakuri", 
