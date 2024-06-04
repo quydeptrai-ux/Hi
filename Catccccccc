@@ -63,8 +63,8 @@ local Tabs = {
     v4 = Window:AddTab({ Title = "🌑┇ V4", Icon = "" }),
     seaeven = Window:AddTab({ Title = "🐟┇ seaeven", Icon = "" }),
     raid = Window:AddTab({ Title = "🏮┇Raid", Icon = "" }),
-    shop = Window:AddTab({ Title = "🛒┇Shop", Icon = "" }),
-    misc = Window:AddTab({ Title = "📔┇Misc", Icon = "" }),
+    Shop = Window:AddTab({ Title = "🛒┇Shop", Icon = "" }),
+    Misc = Window:AddTab({ Title = "📔┇Misc", Icon = "" }),
     setting = Window:AddTab({ Title = "⚙️┇ Setting", Icon = "" }),
 }
  Fluent:Notify({
@@ -746,7 +746,7 @@ coroutine.wrap(GZXPGHC_fake_script)()
 --raid
 --------------------------------------------------------------------------------------------------------------------------------------------
 --shop
-local ToggleRandomBone = Tabs.shop:AddToggle("ToggleRandomBone", {Title = "Random Bone",Description = "Đổi xương", Default = false })
+local ToggleRandomBone = Tabs.Shop:AddToggle("ToggleRandomBone", {Title = "Random Bone",Description = "Đổi xương", Default = false })
 ToggleRandomBone:OnChanged(function(Value)  
 		_G.AutoRandomBone = Value
 end)
@@ -911,7 +911,7 @@ Tabs.Shop:AddButton({
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 --misc
-Tabs.misc:AddButton({
+Tabs.Misc:AddButton({
         Title = "Redeem All Code",
         Description = "Nhập Hết Code",
         Callback = function()
@@ -937,7 +937,7 @@ Tabs.misc:AddButton({
     UseCode("Axiore")
     UseCode("TantaiGaming")
     UseCode("STRAWHATMAINE")
-    Tabs.misc:AddButton({
+    Tabs.Misc:AddButton({
         Title = "Fps Booster",
         Description = "Giảm Lag",
         Callback = function()
