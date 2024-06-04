@@ -56,7 +56,7 @@ Title = "Cat Hub | Blox Fruits",
     MinimizeKey = Enum.KeyCode.LeftControl -- nháº¥n phĂ­m Ctrl Ä‘á»ƒ báº­t táº¯t UI
 })
 local Tabs = {
-    m = Window:AddTab({ Title = "📂┇ Main", Icon = "" }),
+    main = Window:AddTab({ Title = "📂┇ Main", Icon = "" }),
     ite = Window:AddTab({ Title = "🛠┇ item", Icon = "" }),
     f = Window:AddTab({ Title = "🍑┇ Fruit", Icon = "" }),
     v = Window:AddTab({ Title = "🌑┇ V4", Icon = "" }),
@@ -72,7 +72,9 @@ local Tabs = {
         SubContent = "update v0.1", -- Optional
         Duration = 5 -- Set to nil to make the notification not disappear end
 })
-local ToggleBone = Tabs.M:AddToggle("ToggleBone", {
+---------------------------
+Main
+local ToggleBone = Tabs.main:AddToggle("ToggleBone", {
     Title = "Auto Bone",
     Description = "Cày Xương", 
     Default = false })
@@ -142,7 +144,7 @@ spawn(function()
         end
     end
 end)
-local ToggleCake = Tabs.M:AddToggle("ToggleCake", {
+local ToggleCake = Tabs.main:AddToggle("ToggleCake", {
     Title = "Auto Cake Prince",
     Description = "Cày katakuri", 
     Default = false })
@@ -205,8 +207,9 @@ spawn(function()
 			end
 		end
     end)
-})
-    local ToggleSpawnCake = Tabs.M:AddToggle("ToggleSpawnCake", {
+
+
+    local ToggleSpawnCake = Tabs.main:AddToggle("ToggleSpawnCake", {
         Title = "Auto Spawn Cake Prince",
         Description = "Tự Động Triệu Hồi katakuri", 
         Default = true })
