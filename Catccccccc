@@ -142,7 +142,6 @@ spawn(function()
         end
     end
 end)
-})
 local ToggleCake = Tabs.M:AddToggle("ToggleCake", {
     Title = "Auto Cake Prince",
     Description = "Cày katakuri", 
