@@ -1,0 +1,807 @@
+--[[
+
+        Close/Open ui
+
+]]
+
+local ScreenGui = Instance.new("ScreenGui")
+local ImageLabel = Instance.new("ImageLabel")
+local UICorner = Instance.new("UICorner")
+local nut = Instance.new("TextButton")
+local UICorner_2 = Instance.new("UICorner")
+
+
+ScreenGui.Parent = game.CoreGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+ImageLabel.Parent = ScreenGui
+ImageLabel.BackgroundColor3 = Color3.new(1, 1, 1)
+ImageLabel.BorderColor3 = Color3.new(0, 0, 0)
+ImageLabel.BorderSizePixel = 0
+ImageLabel.Position = UDim2.new(0.0981256887, 0, 0.265182197, 0)
+ImageLabel.Size = UDim2.new(0, 55, 0, 55)
+ImageLabel.Image = "http://www.roblox.com/asset/?id=17425369757"
+-- auto show UI
+ImageLabel.Visible = true
+ImageLabel.Active = true
+-- design image
+UICorner.Parent = ImageLabel
+-- nut = textbutton
+nut.Parent = ImageLabel
+nut.BackgroundColor3 = Color3.new(0.14902, 1, 0.615686)
+nut.BackgroundTransparency = 1
+nut.BorderColor3 = Color3.new(0, 0, 0)
+nut.BorderSizePixel = 0
+nut.Size = UDim2.new(0, 55, 0, 55)
+nut.Font = Enum.Font.SourceSansBold
+nut.Text = ""
+nut.TextColor3 = Color3.new(1, 0.466667, 0.286275)
+nut.TextSize = 15
+nut.TextStrokeColor3 = Color3.new(0.25098, 0.960784, 0.12549)
+nut.TextWrapped = true
+nut.MouseButton1Down:Connect(function(a)
+    game:GetService("VirtualInputManager"):SendKeyEvent(true,Enum.KeyCode.LeftControl,false,game)
+end)
+-- design Button
+UICorner_2.Parent = TextButton
+local Fluent = loadstring(game:HttpGet("https://github.com/dawid-scripts/Fluent/releases/latest/download/main.lua"))()
+local InterfaceManager = loadstring(game:HttpGet("https://raw.githubusercontent.com/dawid-scripts/Fluent/master/Addons/InterfaceManager.lua"))()
+local Window = Fluent:CreateWindow({
+Title = "Cat Hub | Blox Fruits",
+    SubTitle = "Free Version | by: Quý",
+    TabWidth = 160,
+    Size = UDim2.fromOffset(530, 350),
+    Acrylic = true,
+    Theme = "Darker",
+    MinimizeKey = Enum.KeyCode.LeftControl -- nháº¥n phĂ­m Ctrl Ä‘á»ƒ báº­t táº¯t UI
+})
+local Tabs = {
+    m = Window:AddTab({ Title = "📂┇ Main", Icon = "" }),
+    ite = Window:AddTab({ Title = "🛠┇ item", Icon = "" }),
+    f = Window:AddTab({ Title = "🍑┇ Fruit", Icon = "" }),
+    v = Window:AddTab({ Title = "🌑┇ V4", Icon = "" }),
+    sea = Window:AddTab({ Title = "🐟┇ seaeven", Icon = "" }),
+    r = Window:AddTab({ Title = "🏮┇Raid", Icon = "" }),
+    s = Window:AddTab({ Title = "🛒┇Shop", Icon = "" }),
+    m = Window:AddTab({ Title = "📔┇Misc", Icon = "" }),
+    set = Window:AddTab({ Title = "⚙️┇ Setting", Icon = "" }),
+}
+ Fluent:Notify({
+        Title = "Notification",
+        Content = "Sắt update",
+        SubContent = "update v0.1", -- Optional
+        Duration = 5 -- Set to nil to make the notification not disappear end
+})
+Tabs.m:AddButton({
+        Title = "Fps Booster",
+        Description = "Giảm Lag",
+        Callback = function()
+            FPSBooster()
+        end
+    })
+
+    function FPSBooster()
+        local decalsyeeted = true
+        local g = game
+        local w = g.Workspace
+        local l = g.Lighting
+        local t = w.Terrain
+        sethiddenproperty(l,"Technology",2)
+        sethiddenproperty(t,"Decoration",false)
+        t.WaterWaveSize = 0
+        t.WaterWaveSpeed = 0
+        t.WaterReflectance = 0
+        t.WaterTransparency = 0
+        l.GlobalShadows = false
+        l.FogEnd = 9e9
+        l.Brightness = 0
+        settings().Rendering.QualityLevel = "Level01"
+        for i, v in pairs(g:GetDescendants()) do
+            if v:IsA("Part") or v:IsA("Union") or v:IsA("CornerWedgePart") or v:IsA("TrussPart") then
+                v.Material = "Plastic"
+                v.Reflectance = 0
+            elseif v:IsA("Decal") or v:IsA("Texture") and decalsyeeted then
+                v.Transparency = 1
+            elseif v:IsA("ParticleEmitter") or v:IsA("Trail") then
+                v.Lifetime = NumberRange.new(0)
+            elseif v:IsA("Explosion") then
+                v.BlastPressure = 1
+                v.BlastRadius = 1
+            elseif v:IsA("Fire") or v:IsA("SpotLight") or v:IsA("Smoke") or v:IsA("Sparkles") then
+                v.Enabled = false
+            elseif v:IsA("MeshPart") then
+                v.Material = "Plastic"
+                v.Reflectance = 0
+                v.TextureID = 10385902758728957
+            end
+        end
+        for i, e in pairs(l:GetChildren()) do
+            if e:IsA("BlurEffect") or e:IsA("SunRaysEffect") or e:IsA("ColorCorrectionEffect") or e:IsA("BloomEffect") or e:IsA("DepthOfFieldEffect") then
+                e.Enabled = false
+            end
+        end
+    end
+    Tabs.m:AddButton({
+        Title = "Redeem All Code",
+        Description = "Nhập Hết Code",
+        Callback = function()
+            UseCode()
+        end
+    })
+
+    function UseCode(Text)
+        game:GetService("ReplicatedStorage").Remotes.Redeem:InvokeServer(Text)
+    end
+    UseCode("Sub2Fer999")
+    UseCode("Enyu_is_Pro")
+    UseCode("Magicbus")
+    UseCode("JCWK")
+    UseCode("Starcodeheo")
+    UseCode("Bluxxy")
+    UseCode("THEGREATACE")
+    UseCode("SUB2GAMERROBOT_EXP1")
+    UseCode("StrawHatMaine")
+    UseCode("Sub2OfficialNoobie")
+    UseCode("SUB2NOOBMASTER123")
+    UseCode("Sub2Daigrock")
+    UseCode("Axiore")
+    UseCode("TantaiGaming")
+    UseCode("STRAWHATMAINE")
+    Tabs.Main:AddButton({
+    Title = "Chets",
+    Description = "Free beta",
+    Callback = function()
+-- Gui to Lua
+-- Version: 3.6
+
+-- Instances:
+
+local farmpaid = Instance.new("ScreenGui")
+local frmain = Instance.new("Frame")
+local ImageLabel = Instance.new("ImageLabel")
+local NameMain = Instance.new("TextButton")
+local player = Instance.new("ImageLabel")
+local UICorner = Instance.new("UICorner")
+local name = Instance.new("TextLabel")
+local user = Instance.new("ImageLabel")
+local key = Instance.new("ImageLabel")
+local paid = Instance.new("TextLabel")
+local UICorner_2 = Instance.new("UICorner")
+local discord = Instance.new("Frame")
+local UICorner_3 = Instance.new("UICorner")
+local fast = Instance.new("TextLabel")
+local cpdis = Instance.new("ImageButton")
+local profile = Instance.new("Frame")
+local UICorner_4 = Instance.new("UICorner")
+local money = Instance.new("ImageLabel")
+local beli = Instance.new("TextLabel")
+local onoff = Instance.new("ImageLabel")
+local on = Instance.new("TextButton")
+
+-- Properties:
+
+farmpaid.Name = "farmpaid"
+farmpaid.Parent = game.Players.LocalPlayer:WaitForChild("PlayerGui")
+
+frmain.Name = "frmain"
+frmain.Parent = farmpaid
+frmain.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+frmain.BackgroundTransparency = 0.600
+frmain.BorderColor3 = Color3.fromRGB(0, 0, 0)
+frmain.BorderSizePixel = 0
+frmain.Position = UDim2.new(0.293333322, 0, 0.294612795, 0)
+frmain.Size = UDim2.new(0, 340, 0, 243)
+
+ImageLabel.Parent = frmain
+ImageLabel.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+ImageLabel.BackgroundTransparency = 1.000
+ImageLabel.BorderColor3 = Color3.fromRGB(0, 0, 0)
+ImageLabel.BorderSizePixel = 0
+ImageLabel.Position = UDim2.new(0.0432825424, 0, 0.0251888074, 0)
+ImageLabel.Size = UDim2.new(0, 40, 0, 40)
+ImageLabel.Image = ""
+
+NameMain.Name = "NameMain"
+NameMain.Parent = frmain
+NameMain.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+NameMain.BackgroundTransparency = 1.000
+NameMain.BorderColor3 = Color3.fromRGB(255, 255, 255)
+NameMain.BorderSizePixel = 0
+NameMain.Position = UDim2.new(0, 54, 0, 15)
+NameMain.Size = UDim2.new(0, 134, 0, 22)
+NameMain.Font = Enum.Font.Gotham
+NameMain.Text = "Auto Farm Chest "
+NameMain.TextColor3 = Color3.fromRGB(255, 255, 255)
+NameMain.TextScaled = true
+NameMain.TextSize = 20.000
+NameMain.TextStrokeColor3 = Color3.fromRGB(255, 255, 255)
+NameMain.TextWrapped = true
+NameMain.TextXAlignment = Enum.TextXAlignment.Left
+
+player.Name = "player"
+player.Parent = frmain
+player.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+player.BackgroundTransparency = 1.000
+player.BorderColor3 = Color3.fromRGB(0, 0, 0)
+player.BorderSizePixel = 0
+player.Position = UDim2.new(0.0423230343, 0, 0.22149834, 0)
+player.Size = UDim2.new(0, 80, 0, 80)
+player.Image = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+
+UICorner.CornerRadius = UDim.new(0, 50)
+UICorner.Parent = player
+
+name.Name = "name"
+name.Parent = frmain
+name.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+name.BackgroundTransparency = 1.000
+name.BorderColor3 = Color3.fromRGB(0, 0, 0)
+name.BorderSizePixel = 0
+name.Position = UDim2.new(0.428218156, 0, 0.272867709, 0)
+name.Size = UDim2.new(0, 194, 0, 24)
+name.Font = Enum.Font.GothamBold
+name.Text = "Name,"
+name.TextColor3 = Color3.fromRGB(255, 255, 255)
+name.TextSize = 20.000
+name.TextWrapped = true
+name.TextXAlignment = Enum.TextXAlignment.Left
+
+user.Name = "user"
+user.Parent = frmain
+user.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+user.BackgroundTransparency = 1.000
+user.BorderColor3 = Color3.fromRGB(0, 0, 0)
+user.BorderSizePixel = 0
+user.Position = UDim2.new(0.311527312, 0, 0.26282528, 0)
+user.Size = UDim2.new(0, 30, 0, 30)
+user.Image = ""
+
+key.Name = "key"
+key.Parent = frmain
+key.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+key.BackgroundTransparency = 1.000
+key.BorderColor3 = Color3.fromRGB(0, 0, 0)
+key.BorderSizePixel = 0
+key.Position = UDim2.new(0.311527312, 0, 0.386282086, 0)
+key.Size = UDim2.new(0, 30, 0, 30)
+key.Image = ""
+
+paid.Name = "Premium | by: Quý dz"
+paid.Parent = frmain
+paid.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+paid.BackgroundTransparency = 1.000
+paid.BorderColor3 = Color3.fromRGB(0, 0, 0)
+paid.BorderSizePixel = 0
+paid.Position = UDim2.new(0.428218156, 0, 0.396324515, 0)
+paid.Size = UDim2.new(0, 194, 0, 24)
+paid.Font = Enum.Font.GothamBold
+paid.Text = "[Premium Beta]"
+paid.TextColor3 = Color3.fromRGB(255, 255, 255)
+paid.TextSize = 20.000
+paid.TextWrapped = true
+paid.TextXAlignment = Enum.TextXAlignment.Left
+
+UICorner_2.Parent = frmain
+
+discord.Name = "discord"
+discord.Parent = frmain
+discord.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+discord.BackgroundTransparency = 0.700
+discord.BorderColor3 = Color3.fromRGB(0, 0, 0)
+discord.BorderSizePixel = 0
+discord.Position = UDim2.new(0.0411764719, 0, 0.588477373, 0)
+discord.Size = UDim2.new(0, 90, 0, 90)
+
+UICorner_3.Parent = discord
+
+fast.Name = "fast"
+fast.Parent = discord
+fast.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+fast.BackgroundTransparency = 1.000
+fast.BorderColor3 = Color3.fromRGB(255, 255, 255)
+fast.BorderSizePixel = 0
+fast.Position = UDim2.new(-0.00315483939, 0, 0.577916801, 0)
+fast.Size = UDim2.new(0, 90, 0, 26)
+fast.Font = Enum.Font.GothamBold
+fast.Text = "Discord"
+fast.TextColor3 = Color3.fromRGB(255, 255, 255)
+fast.TextSize = 20.000
+fast.TextWrapped = true
+
+cpdis.Name = "cpdis"
+cpdis.Parent = discord
+cpdis.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+cpdis.BackgroundTransparency = 1.000
+cpdis.BorderColor3 = Color3.fromRGB(0, 0, 0)
+cpdis.BorderSizePixel = 0
+cpdis.Position = UDim2.new(0.222222224, 0, 0.0333333351, 0)
+cpdis.Size = UDim2.new(0, 50, 0, 50)
+cpdis.Image = "rbxassetid://16014654352"
+
+profile.Name = "profile"
+profile.Parent = frmain
+profile.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+profile.BackgroundTransparency = 0.700
+profile.BorderColor3 = Color3.fromRGB(0, 0, 0)
+profile.BorderSizePixel = 0
+profile.Position = UDim2.new(0.332352936, 0, 0.588477373, 0)
+profile.Size = UDim2.new(0, 217, 0, 90)
+
+UICorner_4.Parent = profile
+
+money.Name = "money"
+money.Parent = profile
+money.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+money.BackgroundTransparency = 1.000
+money.BorderColor3 = Color3.fromRGB(0, 0, 0)
+money.BorderSizePixel = 0
+money.Position = UDim2.new(0.0365068987, 0, 0.125218377, 0)
+money.Size = UDim2.new(0, 30, 0, 30)
+money.Image = "rbxassetid://16262414276"
+
+beli.Name = "beli"
+beli.Parent = profile
+beli.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+beli.BackgroundTransparency = 1.000
+beli.BorderColor3 = Color3.fromRGB(0, 0, 0)
+beli.BorderSizePixel = 0
+beli.Position = UDim2.new(0.202656403, 0, 0.183280781, 0)
+beli.Size = UDim2.new(0, 171, 0, 24)
+beli.Font = Enum.Font.GothamBold
+beli.Text = "BELI"
+beli.TextColor3 = Color3.fromRGB(255, 255, 255)
+beli.TextSize = 15.000
+beli.TextWrapped = true
+beli.TextXAlignment = Enum.TextXAlignment.Left
+
+onoff.Name = "onoff"
+onoff.Parent = profile
+onoff.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+onoff.BackgroundTransparency = 1.000
+onoff.BorderColor3 = Color3.fromRGB(0, 0, 0)
+onoff.BorderSizePixel = 0
+onoff.Position = UDim2.new(0.0365068987, 0, 0.514107287, 0)
+onoff.Size = UDim2.new(0, 30, 0, 30)
+onoff.Image = "rbxassetid://16262561255"
+
+on.Name = "on"
+on.Parent = profile
+on.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+on.BackgroundTransparency = 1.000
+on.BorderColor3 = Color3.fromRGB(0, 0, 0)
+on.BorderSizePixel = 0
+on.Position = UDim2.new(0.202393144, 0, 0.558551729, 0)
+on.Size = UDim2.new(0, 173, 0, 22)
+on.Font = Enum.Font.GothamBold
+on.Text = "On"
+on.TextColor3 = Color3.fromRGB(255, 255, 255)
+on.TextSize = 20.000
+on.TextXAlignment = Enum.TextXAlignment.Left
+
+-- Scripts:
+
+local function BIUKW_fake_script() -- player.player 
+	local script = Instance.new('LocalScript', player)
+
+	local Players = game:GetService("Players")
+	local player = Players.LocalPlayer
+	local imagelable = script.Parent
+	imagelable.Image = Players:GetUserThumbnailAsync(player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size420x420)
+end
+coroutine.wrap(BIUKW_fake_script)()
+local function AUXSOPF_fake_script() -- name.nameplayer 
+	local script = Instance.new('LocalScript', name)
+
+	local player = game.Players.LocalPlayer
+	
+	script.Parent.Text = player.Name
+end
+coroutine.wrap(AUXSOPF_fake_script)()
+local function UEIH_fake_script() -- cpdis.coppy 
+	local script = Instance.new('LocalScript', cpdis)
+
+	script.Parent.MouseButton1Click:Connect(function()
+		setclipboard("https://discord.com/invite/Hg939gE4SE")
+	end)
+end
+coroutine.wrap(UEIH_fake_script)()
+local function TGLOP_fake_script() -- beli.shbeli 
+	local script = Instance.new('LocalScript', beli)
+
+	while wait() do
+		local tbeli = game:GetService("Players").LocalPlayer.Data.Beli.Value
+		script.Parent.Text = tbeli
+	end
+	
+end
+coroutine.wrap(TGLOP_fake_script)()
+local function QGOWVA_fake_script() -- on.sptonoff 
+	local script = Instance.new('LocalScript', on)
+
+	local on = true
+	
+	script.Parent.MouseButton1Click:Connect(function()
+		if on == true then
+			on = false
+			script.Parent.Parent.on.Text = "Off"
+			AutoFarmChest = false
+		else
+			on = true
+			script.Parent.Parent.on.Text = "On"
+			AutoFarmChest = true
+		end
+	end)
+end
+coroutine.wrap(QGOWVA_fake_script)()
+local function GZXPGHC_fake_script() -- frmain.autofarmchest 
+	local script = Instance.new('LocalScript', frmain)
+
+	require(game.ReplicatedStorage.Notification).new("<Color=Yellow>Auto Farm Chest Cat Hub!<Color=/>"):Display()
+	getgenv().Setting = {
+		["WhiteScreen"] = false,
+		["TimeReset"] = 4.5,
+		["ModFarm"] = {
+			["StopItemLegendary"] = true,
+			["SummonKillDarkbeard"] = true
+		}
+	}
+	local p = game.Players
+	local lp = p.LocalPlayer
+	--- Join Team
+	if game:GetService("Players").LocalPlayer.PlayerGui.Main:FindFirstChild("ChooseTeam") then
+		repeat wait()
+			if getgenv().Setting.ModFarm.StopItemLegendary or getgenv().Setting.ModFarm.SummonKillDarkbeard then
+				for i, v in pairs(getconnections(game:GetService("Players").LocalPlayer.PlayerGui.Main.ChooseTeam.Container["Pirates"].Frame.TextButton.Activated)) do
+					for a, b in pairs(getconnections(game:GetService("UserInputService").TouchTapInWorld)) do
+						b:Fire() 
+					end
+					v.Function()
+				end 
+			else
+				game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
+			end
+		until game.Players.LocalPlayer.Team ~= nil and game:IsLoaded()
+	end
+	wait(0.5)
+	game:GetService("RunService"):Set3dRenderingEnabled(not getgenv().Setting.WhiteScreen)
+	AutoFarmChest = true
+	spawn(function()
+		while task.wait() do 
+			if AutoFarmChest then
+				local Chest = game.Workspace:FindFirstChild("Chest4") or game.Workspace:FindFirstChild("Chest3") or game.Workspace:FindFirstChild("Chest2")
+				if Chest then
+					game.Players.LocalPlayer.Character:PivotTo(Chest:GetPivot())
+					firesignal(Chest.Touched,game.Players.LocalPlayer.Character.HumanoidRootPart)
+				else
+					hopserver = true
+					AutoFarmChest = false
+				end
+			end
+		end
+	end)
+	spawn(function()
+		while task.wait() do 
+			if AutoFarmChest and game:GetService("Players").LocalPlayer.Character:FindFirstChild("Head") then
+				wait(getgenv().Setting.TimeReset)
+				if (getgenv().Setting.ModFarm.StopItemLegendary or getgenv().Setting.ModFarm.SummonKillDarkbeard) and game.Players.LocalPlayer.Backpack:FindFirstChild("Fist of Darkness") or game.Players.LocalPlayer.Character:FindFirstChild("Fist of Darkness") or game.Players.LocalPlayer.Backpack:FindFirstChild("God's Chalice") or game.Players.LocalPlayer.Character:FindFirstChild("God's Chalice") then
+					AutoFarmChest = false
+				else
+					game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("SetTeam", "Pirates")
+				end   
+			end
+		end
+	end)
+	spawn(function()
+		while task.wait()do
+			if hopserver then
+				HopServer()
+			end
+		end
+	end)
+	function HopServer(bO)
+		if not bO then
+			bO = 10
+		end
+		ticklon = tick()
+		repeat
+			task.wait()
+		until tick() - ticklon >= 1
+		local function Hop()
+			for r = 1, math.huge do
+				if ChooseRegion == nil or ChooseRegion == "" then
+					ChooseRegion = "Singapore"
+				else
+					game:GetService("Players").LocalPlayer.PlayerGui.ServerBrowser.Frame.Filters.SearchRegion.TextBox.Text =
+						ChooseRegion
+				end
+				local bP = game:GetService("ReplicatedStorage").__ServerBrowser:InvokeServer(r)
+				for k, v in pairs(bP) do
+					if k ~= game.JobId and v["Count"] < bO then
+						game:GetService("ReplicatedStorage").__ServerBrowser:InvokeServer("teleport", k)
+					end
+				end
+			end
+			return false
+		end
+		if not getgenv().Loaded then
+			local function bQ(v)
+				if v.Name == "ErrorPrompt" then
+					if v.Visible then
+						if v.TitleFrame.ErrorTitle.Text == "Teleport Failed" then
+							HopServer()
+							v.Visible = false
+						end
+					end
+					v:GetPropertyChangedSignal("Visible"):Connect(
+					function()
+						if v.Visible then
+							if v.TitleFrame.ErrorTitle.Text == "Teleport Failed" then
+								HopServer()
+								v.Visible = false
+							end
+						end
+					end
+					)
+				end
+			end
+			for k, v in pairs(game.CoreGui.RobloxPromptGui.promptOverlay:GetChildren()) do
+				bQ(v)
+			end
+			game.CoreGui.RobloxPromptGui.promptOverlay.ChildAdded:Connect(bQ)
+			getgenv().Loaded = true
+		end
+		while not Hop() do
+			task.wait()
+		end
+	end
+	game:GetService("CoreGui").RobloxPromptGui.promptOverlay.ChildAdded:Connect(function(child)
+		if not hopserver and child.Name == 'ErrorPrompt' and child:FindFirstChild('MessageArea') and child.MessageArea:FindFirstChild("ErrorFrame") then
+			game:GetService("TeleportService"):Teleport(game.PlaceId)
+		end
+	end)
+	--// Fast Attack
+	local CameraShaker = require(game.ReplicatedStorage.Util.CameraShaker)
+	CombatFrameworkR = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
+	y = debug.getupvalues(CombatFrameworkR)[2]
+	spawn(function()
+		game:GetService("RunService").RenderStepped:Connect(function()
+			if FastAttack then
+				if typeof(y) == "table" then
+					pcall(function()
+						CameraShaker:Stop()
+						y.activeController.timeToNextAttack = 0
+						y.activeController.hitboxMagnitude = 60
+						y.activeController.active = false
+						y.activeController.timeToNextBlock = 0
+						y.activeController.focusStart = 1655503339.0980349
+						y.activeController.increment = 1
+						y.activeController.blocking = false
+						y.activeController.attacking = false
+						y.activeController.humanoid.AutoRotate = true
+					end)
+				end
+			end
+		end)
+	end)
+	spawn(function()
+		game:GetService("RunService").RenderStepped:Connect(function()
+			if FastAttack then
+				if game.Players.LocalPlayer.Character:FindFirstChild("Stun") then
+					game.Players.LocalPlayer.Character.Stun.Value = 0
+					game.Players.LocalPlayer.Character.Humanoid.Sit = false
+					game.Players.LocalPlayer.Character.Busy.Value = false   
+				end    
+			end
+		end)
+	end)
+	--- Fast Attack
+	local CurveFrame = debug.getupvalues(require(game:GetService("Players").LocalPlayer.PlayerScripts:WaitForChild("CombatFramework")))[2]
+	local VirtualUser = game:GetService("VirtualUser")
+	local RigControllerR = debug.getupvalues(require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework.RigController))[2]
+	local Client = game:GetService("Players").LocalPlayer
+	local DMG = require(Client.PlayerScripts.CombatFramework.Particle.Damage)
+	local CameraShaker = require(game.ReplicatedStorage.Util.CameraShaker)
+	CameraShaker:Stop()
+	function CurveFuckWeapon()
+		local p13 = CurveFrame.activeController
+		local wea = p13.blades[1]
+		if not wea then
+			return
+		end
+		while wea.Parent ~= game.Players.LocalPlayer.Character do
+			wea = wea.Parent
+		end
+		return wea
+	end
+	
+	function getHits(Size)
+		local Hits = {}
+		local Enemies = workspace.Enemies:GetChildren()
+		local Characters = workspace.Characters:GetChildren()
+		for i = 1, #Enemies do
+			local v = Enemies[i]
+			local Human = v:FindFirstChildOfClass("Humanoid")
+			if
+				Human and Human.RootPart and Human.Health > 0 and
+				game.Players.LocalPlayer:DistanceFromCharacter(Human.RootPart.Position) < Size + 5
+			then
+				table.insert(Hits, Human.RootPart)
+			end
+		end
+		for i = 1, #Characters do
+			local v = Characters[i]
+			if v ~= game.Players.LocalPlayer.Character then
+				local Human = v:FindFirstChildOfClass("Humanoid")
+				if
+					Human and Human.RootPart and Human.Health > 0 and
+					game.Players.LocalPlayer:DistanceFromCharacter(Human.RootPart.Position) < Size + 5
+				then
+					table.insert(Hits, Human.RootPart)
+				end
+			end
+		end
+		return Hits
+	end
+	
+	local cdnormal = 0
+	local Animation = Instance.new("Animation")
+	
+	
+	abc = true
+	task.spawn(function()
+		local a = game.Players.LocalPlayer
+		local b = require(a.PlayerScripts.CombatFramework.Particle)
+		local c = require(game:GetService("ReplicatedStorage").CombatFramework.RigLib)
+		if not shared.orl then
+			shared.orl = c.wrapAttackAnimationAsync
+		end
+		if not shared.cpc then
+			shared.cpc = b.play
+		end
+		if abc then
+			pcall(function()
+				c.wrapAttackAnimationAsync = function(d, e, f, g, h)
+					local i = c.getBladeHits(e, f, g)
+					if i then
+						b.play = function()
+						end
+						d:Play(0.25, 0.25, 0.25)
+						h(i)
+						b.play = shared.cpc
+						wait(.5)
+						d:Stop()
+					end
+				end
+			end)
+		end
+	end)
+	function AttackHit()
+		local CombatFrameworkLib = debug.getupvalues(require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework))
+		local CmrFwLib = CombatFrameworkLib[2]
+		local plr = game.Players.LocalPlayer
+		for i = 1, 1 do
+			local bladehit = require(game.ReplicatedStorage.CombatFramework.RigLib).getBladeHits(plr.Character,{plr.Character.HumanoidRootPart},60)
+			local cac = {}
+			local hash = {}
+			for k, v in pairs(bladehit) do
+				if v.Parent:FindFirstChild("HumanoidRootPart") and not hash[v.Parent] then
+					table.insert(cac, v.Parent.HumanoidRootPart)
+					hash[v.Parent] = true
+				end
+			end
+			bladehit = cac
+			if #bladehit > 0 then
+				pcall(function()
+					CmrFwLib.activeController.timeToNextAttack = 1
+					CmrFwLib.activeController.attacking = false
+					CmrFwLib.activeController.blocking = false
+					CmrFwLib.activeController.timeToNextBlock = 0
+					CmrFwLib.activeController.increment = 3
+					CmrFwLib.activeController.hitboxMagnitude = 100
+					CmrFwLib.activeController.focusStart = 0
+					game:GetService("ReplicatedStorage").RigControllerEvent:FireServer("weaponChange",tostring(CurveFuckWeapon()))
+					game:GetService("ReplicatedStorage").RigControllerEvent:FireServer("hit", bladehit, i, "")
+				end)
+			end
+		end
+	end
+	--// Equip 
+	function equip(tooltip)
+		local player = game.Players.LocalPlayer
+		local character = player.Character or player.CharacterAdded:wait()
+		for _, item in pairs(player.Backpack:GetChildren()) do
+			if item:IsA("Tool") and item.ToolTip == tooltip then
+				local humanoid = character:FindFirstChildOfClass("Humanoid")
+				if humanoid and not humanoid:IsDescendantOf(item) then
+					game.Players.LocalPlayer.Character.Humanoid:EquipTool(item)
+					return true
+				end
+			end
+		end
+		return false
+	end
+	--// Tween
+	function to(Pos)
+		pcall(function()
+			if lp.Character:FindFirstChild("HumanoidRootPart") and lp.Character:FindFirstChild("Humanoid").Health > 0 then
+				Distance = (Pos.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
+				if not game.Players.LocalPlayer.Character.PrimaryPart:FindFirstChild("Hold") then
+					local Hold = Instance.new("BodyVelocity", game.Players.LocalPlayer.Character.PrimaryPart)
+					Hold.Name = "Hold"
+					Hold.MaxForce = Vector3.new(math.huge, math.huge, math.huge)
+					Hold.Velocity = Vector3.new(0, 0, 0)
+				end
+				if game.Players.LocalPlayer.Character.Humanoid.Sit == true then
+					game.Players.LocalPlayer.Character.Humanoid.Sit = false
+				end
+				local mul = 0.87
+				if Distance < 250 then
+					lp.Character.HumanoidRootPart.CFrame = Pos
+				elseif Distance < 500 then
+					Speed = 400
+				elseif Distance < 1000 then
+					Speed = 375
+				elseif Distance >= 1000 then
+					Speed = 350
+				end
+				pcall(function()
+					tween = game:GetService("TweenService"):Create(game.Players.LocalPlayer.Character.HumanoidRootPart,TweenInfo.new(Distance / Speed, Enum.EasingStyle.Linear),{CFrame = Pos})
+					tween:Play()
+				end)
+				game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame.X, Pos.Y, game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame .Z)
+			end
+		end)
+	end
+	--// CicleTween
+	local radius = 30
+	local angle = 0
+	function getNextPosition(center)
+		angle = angle + 15
+		return center + Vector3.new(math.sin(math.rad(angle)) * radius, 10, math.cos(math.rad(angle)) * radius)
+	end
+	--// Summon And Kill Dark Beard
+	spawn(function()
+		while wait() do
+			if getgenv().Setting.ModFarm.SummonKillDarkbeard and gotobegod then
+				pcall(function()
+					local g = game.Player.LocalPlayer
+					if g.Backpack:FindFirstChild("Fist of Darkness") or g.Character:FindFirstChild("Fist of Darkness") then
+						AutoFarmChest = false
+						equip("Fist of Darkness")
+						to(CFrame.new(3777.58618, 14.8764334, -3498.81909, 0.13158533, 1.16175372e-08, -0.991304874, -9.53944035e-10, 1, 1.15928129e-08, 0.991304874, -5.79794768e-10, 0.13158533))
+					else
+						if game:GetService("Workspace").Enemies:FindFirstChild("Darkbeard") or game:GetService("ReplicatedStorage"):FindFirstChild("Darkbeard") then
+							for i,v in pairs(game.Workspace.Enemies:GetChildren()) do
+								if v and v.Parent and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 and v.Name == "Darkbeard" then
+									repeat task.wait(0.1)
+										if not game:GetService("Players").LocalPlayer.Character:FindFirstChild("HasBuso") then
+											game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
+										end
+										equip("Melee")
+										v.HumanoidRootPart.CanCollide = false
+										v.Head.CanCollide = false
+										v.WalkSpeed = 0
+										to(getNextPosition(v.HumanoidRootPart.CFrame))
+										game:GetService'VirtualUser':CaptureController()
+										game:GetService'VirtualUser':Button1Down(Vector2.new(1280, 672))
+										FastAttack = true
+										AttackHit()
+									until(v:FindFirstChild("Humanoid") and v.Humanoid.Health) <= 0 
+									FastAttack = false
+									AutoFarmChest = true
+								end
+							end
+						end
+					end
+				end)
+			end
+		end
+	end)
+	
+end
+coroutine.wrap(GZXPGHC_fake_script)()
+    end
+  })
+while wait(.1) do
+    print("Quý dz ontop 🧨")
+end
