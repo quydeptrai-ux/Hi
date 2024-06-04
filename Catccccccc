@@ -147,7 +147,7 @@ Tabs.m:AddButton({
     UseCode("Axiore")
     UseCode("TantaiGaming")
     UseCode("STRAWHATMAINE")
-    Tabs.Main:AddButton({
+    Tabs.ite:AddButton({
     Title = "Chets Beta",
     Description = "",
     Callback = function()
