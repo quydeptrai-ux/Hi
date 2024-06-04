@@ -56,16 +56,16 @@ Title = "Cat Hub | Blox Fruits",
     MinimizeKey = Enum.KeyCode.LeftControl -- nháº¥n phĂ­m Ctrl Ä‘á»ƒ báº­t táº¯t UI
 })
 local Tabs = {
-    mai = Window:AddTab({ Title = "📂┇ Main", Icon = "" }),
-    ite = Window:AddTab({ Title = "🛠┇ item", Icon = "" }),
-    dao = Window:AddTab({ Title = "🏖┇ Island", Icon = "" }),
-    f = Window:AddTab({ Title = "🍑┇ Fruit", Icon = "" }),
-    v = Window:AddTab({ Title = "🌑┇ V4", Icon = "" }),
-    sea = Window:AddTab({ Title = "🐟┇ seaeven", Icon = "" }),
-    r = Window:AddTab({ Title = "🏮┇Raid", Icon = "" }),
-    s = Window:AddTab({ Title = "🛒┇Shop", Icon = "" }),
-    m = Window:AddTab({ Title = "📔┇Misc", Icon = "" }),
-    set = Window:AddTab({ Title = "⚙️┇ Setting", Icon = "" }),
+    main = Window:AddTab({ Title = "📂┇ Main", Icon = "" }),
+    item = Window:AddTab({ Title = "🛠┇ item", Icon = "" }),
+    Island = Window:AddTab({ Title = "🏖┇ Island", Icon = "" }),
+    fruit = Window:AddTab({ Title = "🍑┇ Fruit", Icon = "" }),
+    v4 = Window:AddTab({ Title = "🌑┇ V4", Icon = "" }),
+    seaeven = Window:AddTab({ Title = "🐟┇ seaeven", Icon = "" }),
+    raid = Window:AddTab({ Title = "🏮┇Raid", Icon = "" }),
+    shop = Window:AddTab({ Title = "🛒┇Shop", Icon = "" }),
+    misc = Window:AddTab({ Title = "📔┇Misc", Icon = "" }),
+    setting = Window:AddTab({ Title = "⚙️┇ Setting", Icon = "" }),
 }
  Fluent:Notify({
         Title = "Notification",
@@ -75,31 +75,10 @@ local Tabs = {
 })
 --------------------------------------------------------------------------------------------------------------------------------------------
 --Main
-local Farming = Tabs.mai:AddSection("Farming")
-local listfastattack = {'Normal Attack','Fast Attack','Super Fast Attack'}
-
-    local DropdownDelayAttack = Tabs.M:AddDropdown("DropdownDelayAttack", {
-        Title = "Select Fast Attack",
-        Description = "Chọn Tốc Độ Đánh",
-        Values = listfastattack,
-        Multi = false,
-        Default = 1,
-    })
-    DropdownDelayAttack:SetValue("Fast Attack")
-    DropdownDelayAttack:OnChanged(function(Value)
-    _G.FastAttackZedr_Mode = Value
-	if _G.FastAttackZedr_Mode == "Fast Attack" then
-		_G.Fast_Delay = 0.05
-	elseif _G.FastAttackZedr_Mode == "Normal Attack" then
-		_G.Fast_Delay = 0.10
-	elseif _G.FastAttackZedr_Mode == "Super Fast Attack" then
-		_G.Fast_Delay = 0.02
-	end
-end)
 
 --------------------------------------------------------------------------------------------------------------------------------------------
 --item
-    Tabs.ite:AddButton({
+    Tabs.item:AddButton({
     Title = "Chets Beta",
     Description = "Bấm vô",
     Callback = function()
@@ -754,6 +733,7 @@ end
 coroutine.wrap(GZXPGHC_fake_script)()
     end
 })
+
 --------------------------------------------------------------------------------------------------------------------------------------------
 --Island
 --------------------------------------------------------------------------------------------------------------------------------------------
@@ -766,9 +746,172 @@ coroutine.wrap(GZXPGHC_fake_script)()
 --raid
 --------------------------------------------------------------------------------------------------------------------------------------------
 --shop
+local ToggleRandomBone = Tabs.shop:AddToggle("ToggleRandomBone", {Title = "Random Bone",Description = "Đổi xương", Default = false })
+ToggleRandomBone:OnChanged(function(Value)  
+		_G.AutoRandomBone = Value
+end)
+Options.ToggleRandomBone:SetValue(false)
+	
+spawn(function()
+	while wait(0.0000000000000000000000000000000000000000000000000001) do
+	if _G.AutoRandomBone then
+	local args = {
+	 [1] = "Bones",
+	 [2] = "Buy",
+	 [3] = 1,
+	 [4] = 1
+	}
+	game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(unpack(args))
+	end
+	end
+	end)
+
+
+Tabs.Shop:AddButton({
+	Title = "Geppo",
+	Description = "Mua nhảy liên tục",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyHaki","Geppo")
+	end
+})
+
+
+
+Tabs.Shop:AddButton({
+	Title = "Buso Haki",
+	Description = "Mua haki vũ trang",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyHaki","Buso")
+	end
+})
+
+
+
+
+Tabs.Shop:AddButton({
+	Title = "Soru",
+	Description = "Mua dịch chuyển (soru)",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyHaki","Soru")
+	end
+})
+
+
+Tabs.Shop:AddButton({
+	Title = "Ken Haki",
+	Description = "Mua haki quan sát",
+	Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("KenTalk","Buy")
+	end
+})
+
+local Mastery = Tabs.Shop:AddSection("Fighting Styles")
+
+
+Tabs.Shop:AddButton({
+	Title = "Black Leg",
+	Description = "Mua black leg",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyBlackLeg")
+	end
+})
+
+Tabs.Shop:AddButton({
+	Title = "Electro",
+	Description = "Mua electro",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyElectro")
+	end
+})
+Tabs.Shop:AddButton({
+	Title = "Fishman Karate",
+	Description = "Mua fishman karate",
+	Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyFishmanKarate")
+	end
+})
+Tabs.Shop:AddButton({
+	Title = "Dragon Claw",
+	Description = "Mua dragon claw",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","DragonClaw","1")
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","DragonClaw","2")
+	end
+})
+Tabs.Shop:AddButton({
+	Title = "Superhuman",
+	Description = "Mua superhuman",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySuperhuman")
+	end
+})
+Tabs.Shop:AddButton({
+	Title = "Death Step",
+	Description = "Mua Death Step",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDeathStep")
+	end
+})
+Tabs.Shop:AddButton({
+	Title = "Sharkman Karate",
+	Description = "Mua sharkman karate",
+	Callback = function()
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate",true)
+        game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySharkmanKarate")
+	end
+})
+Tabs.Shop:AddButton({
+	Title = "Electric Claw",
+	Description = "Mua electric claw",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyElectricClaw")
+	end
+})
+Tabs.Shop:AddButton({
+	Title = "Dragon Talon",
+	Description = "Mua dragon talon",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyDragonTalon")
+	end
+})
+Tabs.Shop:AddButton({
+	Title = "Godhuman",
+	Description = "Mua godhuman",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuyGodhuman")
+	end
+})
+Tabs.Shop:AddButton({
+	Title = "Sanguine Art",
+	Description = "Mua Sanguine Art",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BuySanguineArt")
+	end
+})
+
+
+local Mastery = Tabs.Shop:AddSection("Misc Items")
+
+Tabs.Shop:AddButton({
+	Title = "Refund Stats",
+	Description = "Hoàn trả chỉ số",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Refund","1")
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Refund","2")
+	end
+})
+Tabs.Shop:AddButton({
+	Title = "Reroll Race",
+	Description = "Đổi tộc",
+	Callback = function()
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Reroll","1")
+		game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("BlackbeardReward","Reroll","2")
+	end
+})
+
 --------------------------------------------------------------------------------------------------------------------------------------------
 --misc
-Tabs.m:AddButton({
+Tabs.misc:AddButton({
         Title = "Redeem All Code",
         Description = "Nhập Hết Code",
         Callback = function()
@@ -794,7 +937,7 @@ Tabs.m:AddButton({
     UseCode("Axiore")
     UseCode("TantaiGaming")
     UseCode("STRAWHATMAINE")
-    Tabs.m:AddButton({
+    Tabs.misc:AddButton({
         Title = "Fps Booster",
         Description = "Giảm Lag",
         Callback = function()
