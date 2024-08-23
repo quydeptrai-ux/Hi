@@ -8101,7 +8101,7 @@ NameTarget = v.Name
 TP1(v.HumanoidRootPart.CFrame * CFrame.new(0,0,3))
 v.HumanoidRootPart.CanCollide = false
 v.HumanoidRootPart.Size = Vector3.new(100, 100, 100)
-Click()
+_G.FastAttack()
 useskilltrial = true
 if tostring(game.Players.LocalPlayer.Team) == "Pirates" then
     topos(v.HumanoidRootPart.CFrame * CFrame.new(0,0,3))
