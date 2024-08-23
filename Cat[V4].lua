@@ -3116,7 +3116,7 @@ R:AddToggle({
         _G.TurnKen = Value
     end
 })
-    M:AddToggle({
+R:AddToggle({
         Name = "Skill Z",
         Default = false,
         Flag = "Skill Z",
@@ -3125,8 +3125,7 @@ R:AddToggle({
             _G.SkillZ = Value
         end    
     })
-
-    M:AddToggle({
+R:AddToggle({
         Name = "Skill! X",
         Default = false,
         Default = false,
@@ -3137,8 +3136,7 @@ R:AddToggle({
         end    
     })
 
-
-    M:AddToggle({
+R:AddToggle({
         Name = "Skill C",
         Default = false,
         Default = false,
@@ -3148,9 +3146,7 @@ R:AddToggle({
             _G.SkillC = Value
         end    
     })
-
-
-    M:AddToggle({
+R:AddToggle({
         Name = "Skill V",
         Default = false,
         Default = false,
@@ -3161,7 +3157,7 @@ R:AddToggle({
         end    
     })
 
-    M:AddToggle({
+R:AddToggle({
         Name = "Skill F",
         Default = false,
         Default = false,
