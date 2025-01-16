@@ -363,7 +363,7 @@ end
 function FlurioreLib:MakeGui(GuiConfig)
 	local GuiConfig = GuiConfig or {}
 	GuiConfig.NameHub = GuiConfig.NameHub or "Cat Hub"
-	GuiConfig.Description = GuiConfig.Description or "by: catdzs1vb"
+	GuiConfig.Description = GuiConfig.Description or "by: catdzs1vn"
 	GuiConfig.Color = GuiConfig.Color or Color3.fromRGB(255, 0, 255)
 	GuiConfig["Logo Player"] = GuiConfig["Logo Player"] or "https://www.roblox.com/headshot-thumbnail/image?userId="..game:GetService("Players").LocalPlayer.UserId .."&width=420&height=420&format=png"
 	GuiConfig["Name Player"] = GuiConfig["Name Player"] or tostring(game:GetService("Players").LocalPlayer.Name)
@@ -1878,6 +1878,7 @@ function FlurioreLib:MakeGui(GuiConfig)
 				CountItem = CountItem + 1
 				return InputFunc
 			end
+
 function Items:AddDropdown(DropdownConfig)
     local DropdownConfig = DropdownConfig or {}
     DropdownConfig.Title = DropdownConfig.Title or "Title"
@@ -1902,6 +1903,7 @@ function Items:AddDropdown(DropdownConfig)
     local OptionSelecting = Instance.new("TextLabel")
     local OptionImg = Instance.new("ImageLabel")
 
+    -- Initial UI Setup
     Dropdown.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
     Dropdown.BackgroundTransparency = 0.9350000023841858
     Dropdown.BorderColor3 = Color3.fromRGB(0, 0, 0)
@@ -2040,7 +2042,7 @@ function Items:AddDropdown(DropdownConfig)
 
     DropdownContent:GetPropertyChangedSignal("AbsoluteSize"):Connect(UpdateContentSize)
     UpdateContentSize()
-
+    
     local DropCount = 0
 
     function DropdownFunc:Clear()
@@ -2097,123 +2099,133 @@ function Items:AddDropdown(DropdownConfig)
         DropdownConfig.Callback(DropdownFunc.Value)
     end
 
-				function DropdownFunc:AddOption(OptionName)
-					OptionName = OptionName or "Option"
-					local Option = Instance.new("Frame");
-					local UICorner37 = Instance.new("UICorner");
-					local OptionButton = Instance.new("TextButton");
-					local OptionText = Instance.new("TextLabel")
-					local ChooseFrame = Instance.new("Frame");
-					local UIStroke15 = Instance.new("UIStroke");
-					local UICorner38 = Instance.new("UICorner");
-					
-					Option.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-					Option.BackgroundTransparency = 0.999
-					Option.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					Option.BorderSizePixel = 0
-					Option.LayoutOrder = DropCount
-					Option.Size = UDim2.new(1, 0, 0, 30)
-					Option.Name = "Option"
-					Option.Parent = ScrollSelect
-				
-					UICorner37.CornerRadius = UDim.new(0, 3)
-					UICorner37.Parent = Option
-				
-					OptionButton.Font = Enum.Font.GothamBold
-					OptionButton.Text = ""
-					OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-					OptionButton.TextSize = 13
-					OptionButton.TextXAlignment = Enum.TextXAlignment.Left
-					OptionButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-					OptionButton.BackgroundTransparency = 0.9990000128746033
-					OptionButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					OptionButton.BorderSizePixel = 0
-					OptionButton.Size = UDim2.new(1, 0, 1, 0)
-					OptionButton.Name = "OptionButton"
-					OptionButton.Parent = Option
+    function DropdownFunc:AddOption(OptionName)
+        OptionName = OptionName or "Option"
+        
+        -- Add to Options tracking if not exists
+        if not table.find(DropdownFunc.Options, OptionName) then
+            table.insert(DropdownFunc.Options, OptionName)
+            
+            local Option = Instance.new("Frame")
+            local UICorner37 = Instance.new("UICorner")
+            local OptionButton = Instance.new("TextButton")
+            local OptionText = Instance.new("TextLabel")
+            local ChooseFrame = Instance.new("Frame")
+            local UIStroke15 = Instance.new("UIStroke")
+            local UICorner38 = Instance.new("UICorner")
 
-					OptionText.Font = Enum.Font.GothamBold
-					OptionText.Text = OptionName
-					OptionText.TextSize = 13
-					OptionText.TextColor3 = Color3.fromRGB(230.77499270439148, 230.77499270439148, 230.77499270439148)
-					OptionText.TextXAlignment = Enum.TextXAlignment.Left
-					OptionText.TextYAlignment = Enum.TextYAlignment.Top
-					OptionText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-					OptionText.BackgroundTransparency = 0.9990000128746033
-					OptionText.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					OptionText.BorderSizePixel = 0
-					OptionText.Position = UDim2.new(0, 8, 0, 8)
-					OptionText.Size = UDim2.new(1, -100, 0, 13)
-					OptionText.Name = "OptionText"
-					OptionText.Parent = Option
-	
-					ChooseFrame.AnchorPoint = Vector2.new(0, 0.5)
-					ChooseFrame.BackgroundColor3 = GuiConfig.Color
-					ChooseFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
-					ChooseFrame.BorderSizePixel = 0
-					ChooseFrame.Position = UDim2.new(0, 2, 0.5, 0)
-					ChooseFrame.Size = UDim2.new(0, 0, 0, 0)
-					ChooseFrame.Name = "ChooseFrame"
-					ChooseFrame.Parent = Option
-				
-					UIStroke15.Color = GuiConfig.Color
-					UIStroke15.Thickness = 1.600000023841858
-					UIStroke15.Transparency = 0.999
-					UIStroke15.Parent = ChooseFrame
-				
-					UICorner38.Parent = ChooseFrame
-					
-					OptionButton.Activated:Connect(function()
-						CircleClick(OptionButton, Mouse.X, Mouse.Y) 
-						if DropdownConfig.Multi then
-							if Option.BackgroundTransparency > 0.95 then
-								table.insert(DropdownFunc.Value, OptionName)
-								DropdownFunc:Set(DropdownFunc.Value)
-							else
-								for i, value in pairs(DropdownFunc.Value) do
-									if value == OptionName then
-										table.remove(DropdownFunc.Value, i)
-										break
-									end
-								end
-								DropdownFunc:Set(DropdownFunc.Value)
-							end
-						else
-							DropdownFunc.Value = {OptionName}
-							DropdownFunc:Set(DropdownFunc.Value)
-						end
-					end)
-					local OffsetY = 0
-					for _, child in ScrollSelect:GetChildren() do
-						if child.Name ~= "UIListLayout" then
-							OffsetY = OffsetY + 3 + child.Size.Y.Offset
-						end
-					end
-					ScrollSelect.CanvasSize = UDim2.new(0, 0, 0, OffsetY)
-					DropCount = DropCount + 1
-				end
-				function DropdownFunc:Refresh(RefreshList, Selecting)
-					RefreshList = RefreshList or {}
-					Selecting = Selecting or {}
-					DropdownFunc:Clear()
-					for _, Drop in pairs(RefreshList) do
-						DropdownFunc:AddOption(Drop)
-						wait()
-					end
-					DropdownFunc.Options = RefreshList
-					DropdownFunc:Set(Selecting)
-				end
-				DropdownFunc:Refresh(DropdownFunc.Options, DropdownFunc.Value)
-				CountItem = CountItem + 1
-				CountDropdown = CountDropdown + 1
-				return DropdownFunc
-			end
-			CountSection = CountSection + 1
-			return Items
-		end
-		CountTab = CountTab + 1
-		return Sections
-	end
-	return Tabs
+            Option.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Option.BackgroundTransparency = 0.999
+            Option.BorderColor3 = Color3.fromRGB(0, 0, 0)
+            Option.BorderSizePixel = 0
+            Option.LayoutOrder = DropCount
+            Option.Size = UDim2.new(1, 0, 0, 30)
+            Option.Name = "Option"
+            Option.Parent = ScrollSelect
+
+            UICorner37.CornerRadius = UDim.new(0, 3)
+            UICorner37.Parent = Option
+
+            OptionButton.Font = Enum.Font.GothamBold
+            OptionButton.Text = ""
+            OptionButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            OptionButton.TextSize = 13
+            OptionButton.TextXAlignment = Enum.TextXAlignment.Left
+            OptionButton.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            OptionButton.BackgroundTransparency = 0.999
+            OptionButton.BorderColor3 = Color3.fromRGB(0, 0, 0)
+            OptionButton.BorderSizePixel = 0
+            OptionButton.Size = UDim2.new(1, 0, 1, 0)
+            OptionButton.Name = "OptionButton"
+            OptionButton.Parent = Option
+
+            OptionText.Font = Enum.Font.GothamBold
+            OptionText.Text = OptionName
+            OptionText.TextSize = 13
+            OptionText.TextColor3 = Color3.fromRGB(230, 230, 230)
+            OptionText.TextXAlignment = Enum.TextXAlignment.Left
+            OptionText.TextYAlignment = Enum.TextYAlignment.Top
+            OptionText.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            OptionText.BackgroundTransparency = 0.999
+            OptionText.BorderColor3 = Color3.fromRGB(0, 0, 0)
+            OptionText.BorderSizePixel = 0
+            OptionText.Position = UDim2.new(0, 8, 0, 8)
+            OptionText.Size = UDim2.new(1, -100, 0, 13)
+            OptionText.Name = "OptionText"
+            OptionText.Parent = Option
+
+            ChooseFrame.AnchorPoint = Vector2.new(0, 0.5)
+            ChooseFrame.BackgroundColor3 = GuiConfig.Color
+            ChooseFrame.BorderColor3 = Color3.fromRGB(0, 0, 0)
+            ChooseFrame.BorderSizePixel = 0
+            ChooseFrame.Position = UDim2.new(0, 2, 0.5, 0)
+            ChooseFrame.Size = UDim2.new(0, 0, 0, 0)
+            ChooseFrame.Name = "ChooseFrame"
+            ChooseFrame.Parent = Option
+
+            UIStroke15.Color = GuiConfig.Color
+            UIStroke15.Thickness = 1.6
+            UIStroke15.Transparency = 0.999
+            UIStroke15.Parent = ChooseFrame
+
+            UICorner38.Parent = ChooseFrame
+
+            OptionButton.Activated:Connect(function()
+                CircleClick(OptionButton, Mouse.X, Mouse.Y)
+                if DropdownConfig.Multi then
+                    if Option.BackgroundTransparency > 0.95 then
+                        table.insert(DropdownFunc.Value, OptionName)
+                    else
+                        for i, value in pairs(DropdownFunc.Value) do
+                            if value == OptionName then
+                                table.remove(DropdownFunc.Value, i)
+                                break
+                            end
+                        end
+                    end
+                    DropdownFunc:Set(DropdownFunc.Value)
+                else
+                    DropdownFunc.Value = {OptionName}
+                    DropdownFunc:Set(DropdownFunc.Value)
+                end
+            end)
+
+            local OffsetY = 0
+            for _, child in pairs(ScrollSelect:GetChildren()) do
+                if child:IsA("Frame") then
+                    OffsetY = OffsetY + 3 + child.Size.Y.Offset
+                end
+            end
+            ScrollSelect.CanvasSize = UDim2.new(0, 0, 0, OffsetY)
+            DropCount = DropCount + 1
+        end
+    end
+
+    function DropdownFunc:Refresh(RefreshList, Selecting)
+        RefreshList = RefreshList or {}
+        Selecting = Selecting or {}
+        DropdownFunc:Clear()
+        for _, Drop in pairs(RefreshList) do
+            DropdownFunc:AddOption(Drop)
+        end
+        DropdownFunc.Options = RefreshList
+        DropdownFunc.Value = Selecting
+        DropdownFunc:Set(Selecting)
+    end
+
+    DropdownFunc:Refresh(DropdownFunc.Options, DropdownFunc.Value)
+
+    DropdownButton.Activated:Connect(function()
+        if not MoreBlur.Visible then
+            MoreBlur.Visible = true
+            DropPageLayout:JumpToIndex(SelectOptionsFrame.LayoutOrder)
+            TweenService:Create(MoreBlur, TweenInfo.new(0.3), {BackgroundTransparency = 0.7}):Play()
+            TweenService:Create(DropdownSelect, TweenInfo.new(0.3), {Position = UDim2.new(1, -11, 0.5, 0)}):Play()
+        end
+    end)
+
+    CountItem = CountItem + 1
+    CountDropdown = CountDropdown + 1
+    return DropdownFunc
 end
 return FlurioreLib
