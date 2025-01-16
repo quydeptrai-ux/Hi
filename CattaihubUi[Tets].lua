@@ -2069,7 +2069,7 @@ function FlurioreLib:MakeGui(GuiConfig)
 								TweenInfo.new(0.1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
 								{BackgroundTransparency = 0.999}
 							):Play()
-						elseif Drop.Name ~= "UIListLayout" and table.find(DropdownFunc.Value, Drop.OptionText.Text) then
+						elseif Drop.Name ~= "UIListLayout" and ((typeof(DropdownFunc.Value) == "table" and table.find(DropdownFunc.Value, Drop.OptionText.Text)) or (typeof(DropdownFunc.Value) == "string" and string.find(Drop.OptionText.Text, DropdownFunc.Value))) then
 							TweenService:Create(
 								Drop.ChooseFrame.UIStroke,
 								TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
