@@ -2087,13 +2087,17 @@ function FlurioreLib:MakeGui(GuiConfig)
 							):Play()
 						end
 					end
-					local DropdownValueTable = table.concat(DropdownFunc.Value, ", ")
-					if DropdownValueTable == "" then
-						OptionSelecting.Text = "Select Options"
+					if DropdownConfig.Multi and typeof(DropdownFunc.Value) == "table" then
+						local DropdownValueTable = table.concat(DropdownFunc.Value, ", ")
+						if DropdownValueTable == "" then
+							OptionSelecting.Text = "Select Options"
+						else
+							OptionSelecting.Text = tostring(DropdownValueTable)
+						end
+						DropdownConfig.Callback(DropdownFunc.Value)
 					else
-						OptionSelecting.Text = tostring(DropdownValueTable)
+						DropdownConfig.Callback(DropdownFunc.Value)
 					end
-					DropdownConfig.Callback(DropdownFunc.Value)
 				end
 				function DropdownFunc:AddOption(OptionName)
 					OptionName = OptionName or "Option"
@@ -2177,7 +2181,7 @@ function FlurioreLib:MakeGui(GuiConfig)
 								DropdownFunc:Set(DropdownFunc.Value)
 							end
 						else
-							DropdownFunc.Value = {OptionName}
+							DropdownFunc.Value = OptionName
 							DropdownFunc:Set(DropdownFunc.Value)
 						end
 					end)
