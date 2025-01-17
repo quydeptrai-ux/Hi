@@ -139,8 +139,8 @@ function CircleClick(Button, X, Y)
 	end)
 end
 
-local FlurioreLib = {}
-function FlurioreLib:MakeNotify(NotifyConfig)
+local CatLib = {}
+function CatLib:MakeNotify(NotifyConfig)
 	local NotifyConfig = NotifyConfig or {}
 	NotifyConfig.Title = NotifyConfig.Title or "Cat Hub"
 	NotifyConfig.Description = NotifyConfig.Description or "Notification"
@@ -360,7 +360,7 @@ function FlurioreLib:MakeNotify(NotifyConfig)
 	end)
 	return NotifyFunction
 end
-function FlurioreLib:MakeGui(GuiConfig)
+function CatLib:MakeGui(GuiConfig)
 	local GuiConfig = GuiConfig or {}
 	GuiConfig.NameHub = GuiConfig.NameHub or "Cat Hub"
 	GuiConfig.Description = GuiConfig.Description or "by: catdzs1vn"
@@ -2218,4 +2218,4 @@ function FlurioreLib:MakeGui(GuiConfig)
 	end
 	return Tabs
 end
-return FlurioreLib
+return CatLib
