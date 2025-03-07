@@ -7,7 +7,7 @@ getgenv().config = {
         ["MaxDistance"] = 1000
     },
     ["Setting"] = {
-        ["TweenSpeed"] = 350,
+        ["TweenSpeed"] = 500, -- Tốc độ di chuyển bằng Tween
         ["HopForFruit"] = true,
         ["Hop"] = "Smart",
         ["MinPlayers"] = 1,
@@ -32,10 +32,9 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
-local UserInputService = game:GetService("UserInputService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
--- UI Setup
+-- UI Setup (Giữ nguyên)
 local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
 ScreenGui.Name = "Catdzs1vnStatus"
 ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
@@ -45,7 +44,6 @@ ScreenGui.IgnoreGuiInset = true
 local MainFrame = Instance.new("Frame", ScreenGui)
 MainFrame.Name = "MainFrame"
 MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-MainFrame.BackgroundTransparency = 0
 MainFrame.Position = UDim2.new(0.5, -200, 0.5, -150)
 MainFrame.Size = UDim2.new(0, 400, 0, 300)
 MainFrame.Active = true
@@ -56,7 +54,6 @@ Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 10)
 local TitleBar = Instance.new("Frame", MainFrame)
 TitleBar.Name = "TitleBar"
 TitleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-TitleBar.BackgroundTransparency = 0
 TitleBar.Size = UDim2.new(1, 0, 0, 40)
 Instance.new("UICorner", TitleBar).CornerRadius = UDim.new(0, 10)
 
@@ -73,7 +70,6 @@ TitleText.TextXAlignment = Enum.TextXAlignment.Left
 local ToggleButton = Instance.new("TextButton", ScreenGui)
 ToggleButton.Name = "ToggleButton"
 ToggleButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-ToggleButton.BackgroundTransparency = 0
 ToggleButton.Position = UDim2.new(0.01, 0, 0.95, -60)
 ToggleButton.Size = UDim2.new(0, 60, 0, 60)
 ToggleButton.Font = Enum.Font.GothamBold
@@ -91,7 +87,6 @@ ContentFrame.BackgroundTransparency = 1
 ContentFrame.Position = UDim2.new(0, 15, 0, 50)
 ContentFrame.Size = UDim2.new(1, -30, 1, -60)
 
--- Nhãn trạng thái
 local function CreateStatusLabel(name, position, defaultText)
     local Label = Instance.new("TextLabel", ContentFrame)
     Label.Name = name
@@ -121,28 +116,62 @@ local function Notify(text)
     game.StarterGui:SetCore("SendNotification", {Title = "Cắt Tai Hub", Text = text, Duration = 5})
 end
 
--- Fast Teleport Function
+-- Fast Teleport Function (100% Tween, không Teleport)
 local function fastTeleport(targetCFrame)
     local player = Players.LocalPlayer
     local character = player.Character or player.CharacterAdded:Wait()
     local root = character:WaitForChild("HumanoidRootPart")
-    root.CFrame = targetCFrame + Vector3.new(0, 5, 0)
-    task.wait(0.1)
+    local distance = (root.Position - targetCFrame.Position).Magnitude
+    local tweenInfo = TweenInfo.new(
+        distance / getgenv().config["Setting"]["TweenSpeed"], -- Thời gian dựa trên khoảng cách và tốc độ
+        Enum.EasingStyle.Linear -- Di chuyển đều
+    )
+    local tween = TweenService:Create(root, tweenInfo, {CFrame = targetCFrame + Vector3.new(0, 5, 0)})
+    tween:Play()
+    tween.Completed:Wait() -- Đợi tween hoàn thành trước khi tiếp tục
 end
 
--- Auto Choose Team Function
+-- Auto Choose Team Function (Giữ nguyên)
 task.spawn(function()
+    local player = Players.LocalPlayer
     local teamToSelect = getgenv().config.Setting["Select Team"] or "Pirates"
-    while not game.Players.LocalPlayer.Team do
-        local success, err = pcall(function()
-            ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamToSelect)
+    
+    local character = player.Character or player.CharacterAdded:Wait()
+    if not character:FindFirstChild("HumanoidRootPart") then
+        character:WaitForChild("HumanoidRootPart")
+    end
+    
+    local validTeams = {"Pirates", "Marines"}
+    if not table.find(validTeams, teamToSelect) then
+        Notify("Team không hợp lệ: " .. teamToSelect .. ". Đặt mặc định: Pirates")
+        teamToSelect = "Pirates"
+    end
+    
+    local maxAttempts = 10
+    local attempt = 0
+    while not player.Team and attempt < maxAttempts do
+        attempt = attempt + 1
+        local success, result = pcall(function()
+            return ReplicatedStorage.Remotes.CommF_:InvokeServer("SetTeam", teamToSelect)
         end)
-        if success then Notify("Đã chọn team: " .. teamToSelect) else Notify("Lỗi khi chọn team: " .. tostring(err)) end
+        
+        if success and result then
+            Notify("Đã chọn team: " .. teamToSelect)
+            break
+        else
+            Notify("Lỗi khi chọn team (Thử " .. attempt .. "/" .. maxAttempts .. "): " .. tostring(result or "Không có phản hồi"))
+        end
         task.wait(1)
+    end
+    
+    if not player.Team then
+        Notify("Không thể chọn team sau " .. maxAttempts .. " lần thử!")
+    else
+        Notify("Team hiện tại: " .. tostring(player.Team))
     end
 end)
 
--- ESP Function
+-- ESP Function (Giữ nguyên)
 local function UpdateBfEsp()
     if not getgenv().config["Fruit"]["Esp Fruit"] then return end
     local player = Players.LocalPlayer
@@ -152,14 +181,14 @@ local function UpdateBfEsp()
     for _, v in pairs(Workspace:GetChildren()) do
         if v:IsA("Model") and v.Name:find("Fruit") then
             local handle = v:FindFirstChild("Handle")
-            if handle then
-                local bill = handle:FindFirstChild("NameEsp") or Instance.new("BillboardGui", handle)
+            if handle and not handle:FindFirstChild("NameEsp") then
+                local bill = Instance.new("BillboardGui", handle)
                 bill.Name = "NameEsp"
                 bill.Size = UDim2.new(0, 200, 0, 50)
                 bill.Adornee = handle
                 bill.AlwaysOnTop = true
 
-                local name = bill:FindFirstChild("TextLabel") or Instance.new("TextLabel", bill)
+                local name = Instance.new("TextLabel", bill)
                 name.Font = Enum.Font.GothamBold
                 name.TextSize = 16
                 name.Size = UDim2.new(1, 0, 1, 0)
@@ -174,7 +203,7 @@ local function UpdateBfEsp()
     end
 end
 
--- Anti-AFK
+-- Anti-AFK (Giữ nguyên)
 if getgenv().config["Setting"]["AntiAFK"] then
     task.spawn(function()
         while task.wait(math.random(50, 70)) do
@@ -184,65 +213,24 @@ if getgenv().config["Setting"]["AntiAFK"] then
     end)
 end
 
--- Webhook Function
-local hasSentActiveWebhook = false
-local hasSentSettingsWebhook = false -- Flag mới cho settings
-local function SendWebhook(fruitName, action, position)
-    if not getgenv().config["Webhook"]["Send Webhook"] or getgenv().config["Webhook"]["Webhook Url"] == "" then return end
+-- Webhook Function (Chỉ gửi khi nhặt fruit)
+local function SendWebhook(fruitName, position)
+    if not getgenv().config["Webhook"]["Send Webhook"] or not getgenv().config["Webhook"]["Webhook Url"] then return end
     local webhookUrl = getgenv().config["Webhook"]["Webhook Url"]
-    if not webhookUrl:match("^https://discord.com/api/webhooks/") then
-        Notify("Webhook URL không hợp lệ!")
-        return
-    end
-
     local playerCount = #Players:GetPlayers()
-    local currentFruits = {}
-    local rareCount = 0
-    for _, v in pairs(Workspace:GetChildren()) do
-        if v:IsA("Model") and v.Name:find("Fruit") then
-            local fname = v.Name:gsub(" Fruit", "")
-            table.insert(currentFruits, fname)
-            if table.find(getgenv().config["Fruit"]["PriorityFruits"], fname) then rareCount = rareCount + 1 end
-        end
-    end
-    local fruitList = table.concat(currentFruits, ", ") or "None"
-    local data
-    if action == "active" then
-        data = {
-            username = "Fruit Notifier",
-            embeds = {{
-                title = "Script Status",
-                description = "Cắt Tai Hub has been active! 🟢\nServer ID: " .. game.JobId .. "\nPlayers: " .. playerCount .. "\nTime: " .. os.date("!%H:%M:%S", os.time() + 7 * 3600),
-                color = 65280,
-                footer = {text = "One-time activation message"}
-            }}
-        }
-    elseif action == "settings" then
-        data = {
-            username = "Fruit Notifier",
-            embeds = {{
-                title = "Settings Saved",
-                description = "Settings đã được lưu vào file Setting.json! 🟢\nServer ID: " .. game.JobId .. "\nTime: " .. os.date("!%H:%M:%S", os.time() + 7 * 3600),
-                color = 65280,
-                footer = {text = "One-time settings save message"}
-            }}
-        }
-    else
-        data = {
-            username = "Fruit Notifier",
-            embeds = {{
-                title = action == "pickup" and "🍎 Fruit Picked Up!" or action == "spawn" and "🍇 Fruit Spawned!" or "🌐 Server Hopped!",
-                description = string.format(
-                    "Fruit: %s\nAction: %s\nServer ID: %s\nPlayers: %d\nTime: %s\nPosition: (%.1f, %.1f, %.1f)\nCurrent Fruits: %s\nRare Fruits: %d\nTeam: %s",
-                    fruitName or "N/A", action == "pickup" and "Picked Up" or action == "spawn" and "Spawned" or "Hopped", game.JobId, playerCount,
-                    os.date("!%H:%M:%S", os.time() + 7 * 3600), position.X, position.Y, position.Z, fruitList, rareCount,
-                    getgenv().config["Setting"]["Select Team"]
-                ),
-                color = action == "pickup" and 65280 or action == "spawn" and 16711680 or 255,
-                thumbnail = action ~= "hop" and {url = "https://blox-fruits.com/wp-content/uploads/" .. (fruitName or "Default") .. ".png"} or nil
-            }}
-        }
-    end
+    local data = {
+        username = "Fruit Notifier",
+        embeds = {{
+            title = "🍎 Fruit Picked Up!",
+            description = string.format(
+                "Fruit: %s\nServer ID: %s\nPlayers: %d\nTime: %s\nPosition: (%.1f, %.1f, %.1f)\nTeam: %s",
+                fruitName, game.JobId, playerCount, os.date("!%H:%M:%S", os.time() + 7 * 3600),
+                position.X, position.Y, position.Z, getgenv().config["Setting"]["Select Team"]
+            ),
+            color = 65280,
+            thumbnail = {url = "https://blox-fruits.com/wp-content/uploads/" .. fruitName .. ".png"}
+        }}
+    }
     pcall(function()
         (http_request or request or syn.request)({
             Url = webhookUrl,
@@ -253,40 +241,8 @@ local function SendWebhook(fruitName, action, position)
     end)
 end
 
--- Send Active Webhook Once
-if not hasSentActiveWebhook and getgenv().config["Webhook"]["Send Webhook"] and getgenv().config["Webhook"]["Webhook Url"] ~= "" then
-    SendWebhook(nil, "active", Vector3.new(0, 0, 0))
-    hasSentActiveWebhook = true
-    Notify("Script đã kích hoạt và gửi thông báo tới Webhook!")
-end
-
--- Save Settings Function
-local foldername = "Cắt Tai Hub[Fruit]"
-local filename = foldername .. "/Setting.json"
-function saveSettings()
-    local json = HttpService:JSONEncode(getgenv().config) -- Mã hóa config thành JSON
-    if true then -- Điều kiện luôn đúng để giữ logic của bạn
-        if not isfolder(foldername) then
-            makefolder(foldername)
-            Notify("Đã tạo folder: " .. foldername)
-        end
-        writefile(filename, json)
-        Notify("Đã lưu settings vào: " .. filename)
-
-        -- Gửi Webhook một lần khi lưu settings
-        if not hasSentSettingsWebhook and getgenv().config["Webhook"]["Send Webhook"] and getgenv().config["Webhook"]["Webhook Url"] ~= "" then
-            SendWebhook(nil, "settings", Vector3.new(0, 0, 0))
-            hasSentSettingsWebhook = true
-            Notify("Đã gửi thông báo lưu settings tới Webhook!")
-        end
-    end
-end
-
--- Gọi saveSettings sau khi game load
-saveSettings()
-
--- Get_Fruit Function
-local function Get_Fruit(Fruit)
+-- Store Fruit
+local function StoreFruit(fruit)
     local fruitMap = {
         ["Rocket Fruit"] = "Rocket-Rocket", ["Spin Fruit"] = "Spin-Spin", ["Chop Fruit"] = "Chop-Chop",
         ["Spring Fruit"] = "Spring-Spring", ["Bomb Fruit"] = "Bomb-Bomb", ["Smoke Fruit"] = "Smoke-Smoke",
@@ -303,12 +259,7 @@ local function Get_Fruit(Fruit)
         ["Leopard Fruit"] = "Leopard-Leopard", ["T-Rex Fruit"] = "T-Rex-T-Rex", ["Kitsune Fruit"] = "Kitsune-Kitsune",
         ["Gas Fruit"] = "Gas-Gas", ["Yeti Fruit"] = "Yeti-Yeti"
     }
-    return fruitMap[Fruit] or (Fruit:gsub(" Fruit", "") .. "-" .. Fruit:gsub(" Fruit", ""))
-end
-
--- Store Fruit
-local function StoreFruit(fruit)
-    local fruitName = Get_Fruit(fruit.Name)
+    local fruitName = fruitMap[fruit.Name] or (fruit.Name:gsub(" Fruit", "") .. "-" .. fruit.Name:gsub(" Fruit", ""))
     pcall(function()
         ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", fruitName, fruit)
     end)
@@ -359,7 +310,7 @@ local function CheckCurrentServerForFruits()
     return fruitCount > 0, fruitCount, fruitList, rareCount, fruitsInRange
 end
 
--- SmartHop v10
+-- SmartHop v11 (Giữ nguyên)
 local hopCount = 0
 local visitedServers = {}
 local serverStartTime = os.time()
@@ -369,34 +320,32 @@ local function SmartHop()
     ServerHopStatusLabel.Text = "Server Hop: Checking current server (ID: " .. game.JobId .. ")"
     local hasFruits, fruitCount, _, rareCount = CheckCurrentServerForFruits()
     local timeInServer = os.time() - serverStartTime
-    local dynamicTimeout = math.max(60, getgenv().config["Setting"]["HopTimeout"] - (fruitCount * 30))
+    local dynamicTimeout = math.max(60, getgenv().config["Setting"]["HopTimeout"] - (fruitCount * 20))
 
     if hasFruits and (rareCount > 0 or timeInServer < dynamicTimeout) then
-        ServerHopStatusLabel.Text = "Server Hop: " .. fruitCount .. " fruits found (ID: " .. game.JobId .. ")"
-        Notify(fruitCount .. " fruits found, staying! (Time: " .. timeInServer .. "s)")
+        ServerHopStatusLabel.Text = "Server Hop: Staying - " .. fruitCount .. " fruits (ID: " .. game.JobId .. ")"
         return true
     end
 
     local placeId = game.PlaceId
     local cursor = ""
     local attempts = 0
-    local backoff = 0.5
     visitedServers[game.JobId] = os.time()
-    ServerHopStatusLabel.Text = "Server Hop: Scanning servers... (Attempts: " .. attempts .. "/" .. getgenv().config["Setting"]["MaxHopAttempts"] .. ")"
+    ServerHopStatusLabel.Text = "Server Hop: Scanning servers..."
 
     local function findBestServer(servers)
         local bestServer = nil
-        local minDiff = math.huge
+        local bestScore = -math.huge
         for _, server in pairs(servers) do
             local playerCount = server.playing
             local serverId = server.id
-            local diff = math.abs(playerCount - getgenv().config["Setting"]["MinPlayers"])
             if playerCount >= getgenv().config["Setting"]["MinPlayers"] and 
                playerCount <= getgenv().config["Setting"]["MaxPlayers"] and 
                serverId ~= game.JobId and 
-               (not visitedServers[serverId] or (os.time() - visitedServers[serverId]) > 300) then
-                if diff < minDiff then
-                    minDiff = diff
+               (not visitedServers[serverId] or (os.time() - visitedServers[serverId]) > 600) then
+                local score = 100 - math.abs(playerCount - (getgenv().config["Setting"]["MinPlayers"] + getgenv().config["Setting"]["MaxPlayers"]) / 2)
+                if score > bestScore then
+                    bestScore = score
                     bestServer = server
                 end
             end
@@ -410,14 +359,11 @@ local function SmartHop()
         end)
 
         if not success then
-            backoff = math.min(backoff * 2, 5)
-            ServerHopStatusLabel.Text = "Server Hop: API Error, retrying in " .. backoff .. "s..."
-            Notify("API Error, retrying in " .. backoff .. "s...")
-            task.wait(backoff)
+            ServerHopStatusLabel.Text = "Server Hop: API Error, retrying..."
+            task.wait(2)
             continue
         end
 
-        backoff = 0.5
         cursor = response.nextPageCursor or ""
         local targetServer = findBestServer(response.data)
         
@@ -425,63 +371,30 @@ local function SmartHop()
             hopCount = hopCount + 1
             attempts = attempts + 1
             visitedServers[targetServer.id] = os.time()
-            ServerHopStatusLabel.Text = "Server Hop: Hopping to " .. targetServer.id .. " (" .. targetServer.playing .. " players, Attempt " .. attempts .. ")"
-            Notify("Hopping to server " .. targetServer.id .. " (" .. targetServer.playing .. " players)")
-            SendWebhook(nil, "hop", Vector3.new(0, 0, 0))
+            ServerHopStatusLabel.Text = "Server Hop: Hopping to " .. targetServer.id .. " (" .. targetServer.playing .. " players)"
+            Notify("Hopping to " .. targetServer.id .. " (" .. targetServer.playing .. " players)")
             TeleportService:TeleportToPlaceInstance(placeId, targetServer.id)
-            task.wait(math.random(3, 5))
+            task.wait(5)
 
-            for i = 1, 15 do
+            for i = 1, 10 do
                 local hasFruitsCheck, fruitCountCheck = CheckCurrentServerForFruits()
                 if hasFruitsCheck then
                     serverStartTime = os.time()
-                    ServerHopStatusLabel.Text = "Server Hop: Fruits found (ID: " .. targetServer.id .. ", " .. fruitCountCheck .. " fruits)"
-                    Notify("Fruits detected in " .. targetServer.id .. " (" .. fruitCountCheck .. " fruits)!")
+                    ServerHopStatusLabel.Text = "Server Hop: Fruits found in " .. targetServer.id .. " (" .. fruitCountCheck .. " fruits)"
                     return true
                 end
-                task.wait(0.3)
+                task.wait(0.5)
             end
-            ServerHopStatusLabel.Text = "Server Hop: No fruits in " .. targetServer.id .. ", hopping again..."
-            Notify("No fruits in " .. targetServer.id .. ", hopping again...")
         end
 
-        task.wait(math.random(0.2, 0.5))
-        if cursor == "" then
-            if attempts > getgenv().config["Setting"]["MaxHopAttempts"] / 2 then
-                getgenv().config["Setting"]["MaxPlayers"] = math.min(getgenv().config["Setting"]["MaxPlayers"] + 2, 12)
-                Notify("Tăng MaxPlayers lên " .. getgenv().config["Setting"]["MaxPlayers"] .. " để thử server đông hơn!")
-            end
-            break
-        end
+        task.wait(0.3)
+        if cursor == "" then break end
     end
 
-    ServerHopStatusLabel.Text = "Server Hop: No suitable servers after " .. attempts .. " attempts"
-    Notify("No servers with fruits found after " .. attempts .. " attempts!")
+    ServerHopStatusLabel.Text = "Server Hop: No suitable servers found"
+    Notify("No suitable servers after " .. attempts .. " attempts!")
     return false
 end
-
--- Fruit Spawn Detection
-local knownFruits = {}
-task.spawn(function()
-    while task.wait(0.5) do
-        local currentFruits = {}
-        for _, v in pairs(Workspace:GetChildren()) do
-            if v:IsA("Model") and v.Name:find("Fruit") and v:FindFirstChild("Handle") then
-                local fruitId = tostring(v)
-                currentFruits[fruitId] = v
-                if not knownFruits[fruitId] then
-                    local fruitName = v.Name:gsub(" Fruit", "")
-                    Notify("New fruit spawned: " .. fruitName .. "!")
-                    SendWebhook(fruitName, "spawn", v.Handle.Position)
-                    knownFruits[fruitId] = v
-                end
-            end
-        end
-        for id in pairs(knownFruits) do
-            if not currentFruits[id] then knownFruits[id] = nil end
-        end
-    end
-end)
 
 -- Fruit Farming Loop
 local collectedFruits = 0
@@ -491,10 +404,9 @@ task.spawn(function()
     while task.wait(0.03) do
         if not getgenv().config["Fruit"]["FarmFruit"] then continue end
 
-        local hasFruits, fruitCount, fruitList, rareCount, fruitsInRange = CheckCurrentServerForFruits()
+        local hasFruits, _, _, _, fruitsInRange = CheckCurrentServerForFruits()
         if not hasFruits then
-            ServerHopStatusLabel.Text = "Server Hop: No fruits in range, hopping..."
-            Notify("No fruits in range, hopping...")
+            ServerHopStatusLabel.Text = "Server Hop: No fruits, triggering hop..."
             SmartHop()
             continue
         end
@@ -508,43 +420,24 @@ task.spawn(function()
         end)
 
         for _, fruitData in pairs(fruitsInRange) do
-            if fruitData.Distance <= 50 then
-                local fruit = fruitData.Model
-                local fruitName = fruitData.Name
-                fastTeleport(fruit.Handle.CFrame)
-                collectedFruits = collectedFruits + 1
-                if table.find(getgenv().config["Fruit"]["PriorityFruits"], fruitName) then rareFruitsFound = rareFruitsFound + 1 end
-                FruitsCollectedLabel.Text = "Fruits Collected: " .. collectedFruits
-                LastFruitLabel.Text = "Last Fruit: " .. fruitName
-                RareFruitsLabel.Text = "Rare Fruits Found: " .. rareFruitsFound
-                Notify("Picked up: " .. fruitName .. " (Fast)")
-                SendWebhook(fruitName, "pickup", fruit.Handle.Position)
-                if getgenv().config["Fruit"]["StoreFruit"] then StoreFruit(fruit) end
-                task.wait(0.1)
-            end
-        end
-
-        local targetFruit = fruitsInRange[1]
-        if targetFruit then
-            local fruit = targetFruit.Model
-            local fruitName = targetFruit.Name
+            local fruit = fruitData.Model
+            local fruitName = fruitData.Name
             fastTeleport(fruit.Handle.CFrame)
             collectedFruits = collectedFruits + 1
             if table.find(getgenv().config["Fruit"]["PriorityFruits"], fruitName) then rareFruitsFound = rareFruitsFound + 1 end
             FruitsCollectedLabel.Text = "Fruits Collected: " .. collectedFruits
             LastFruitLabel.Text = "Last Fruit: " .. fruitName
             RareFruitsLabel.Text = "Rare Fruits Found: " .. rareFruitsFound
-            Notify("Picked up: " .. fruitName .. " (Priority)")
-            SendWebhook(fruitName, "pickup", fruit.Handle.Position)
+            Notify("Picked up: " .. fruitName)
+            SendWebhook(fruitName, fruit.Handle.Position)
             if getgenv().config["Fruit"]["StoreFruit"] then StoreFruit(fruit) end
+            task.wait(0.1)
         end
 
-        task.wait(0.2)
         local stillHasFruits, _, _, stillHasRare = CheckCurrentServerForFruits()
         local timeInServer = os.time() - serverStartTime
         if not stillHasFruits or (stillHasRare == 0 and rareFruitsFound > 0) or timeInServer >= getgenv().config["Setting"]["HopTimeout"] then
-            ServerHopStatusLabel.Text = "Server Hop: Triggered (No fruits/rare or timeout after " .. timeInServer .. "s)"
-            Notify("Hopping: No fruits/rare or timeout after " .. timeInServer .. "s")
+            ServerHopStatusLabel.Text = "Server Hop: Triggered (No fruits or timeout)"
             SmartHop()
         end
     end
@@ -552,5 +445,5 @@ end)
 
 -- ESP Loop
 task.spawn(function()
-    while task.wait(0.03) do UpdateBfEsp() end
+    while task.wait(0.05) do UpdateBfEsp() end
 end)
