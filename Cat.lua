@@ -19,7 +19,7 @@ getgenv().config = {
     },
     ["Webhook"] = {
         ["Send Webhook"] = true,        -- Enable webhook
-        ["Webhook Url"] = "https://discord.com/api/webhooks/1336551381254934641/V73uXNSAy1IyjjE5MEN6rp5U2EbCCW8u8ldpEvkegyaojOmeQ1So493j8ovGn9Pp8MIj"            -- Replace with your Discord webhook URL
+        ["Webhook Url"] = ""            -- Replace with your Discord webhook URL
     }
 }
 
@@ -31,6 +31,7 @@ local HttpService = game:GetService("HttpService")
 local TeleportService = game:GetService("TeleportService")
 local RunService = game:GetService("RunService")
 local VirtualUser = game:GetService("VirtualUser")
+local UserInputService = game:GetService("UserInputService")
 
 -- UI Setup
 local ScreenGui = Instance.new("ScreenGui", game:GetService("CoreGui"))
@@ -130,29 +131,31 @@ local function topos(targetCFrame)
     tween.Completed:Wait()
 end
 
--- Auto Choose Team Function
+-- Auto Choose Team Function (Cập nhật mới)
 task.spawn(function()
     local player = Players.LocalPlayer
-    while task.wait(1) do
-        if player.Team then break end -- Thoát nếu đã có đội
-        local ChooseTeam = player.PlayerGui:FindFirstChild("ChooseTeam", true)
-        local UIController = player.PlayerGui:FindFirstChild("UIController", true)
-        if UIController and ChooseTeam and ChooseTeam.Visible then
-            for i, v in pairs(getgc()) do
-                if type(v) == "function" and getfenv(v).script == UIController then
-                    local constant = getconstants(v)
-                    pcall(function()
-                        if (constant[1] == "Pirates" or constant[1] == "Marines") and #constant == 1 then
-                            local teamToSelect = getgenv().config["Setting"]["Team"]
-                            if constant[1] == teamToSelect then
-                                v(teamToSelect)
-                                Notify("Joined team: " .. teamToSelect)
-                            end
+    if player.PlayerGui.Main:FindFirstChild("ChooseTeam") then
+        repeat task.wait()
+            if player.PlayerGui:WaitForChild("Main").ChooseTeam.Visible then
+                if getgenv().config["Setting"]["Team"] == "Marines" then
+                    for i, v in pairs(getconnections(player.PlayerGui.Main.ChooseTeam.Container["Marines"].Frame.TextButton.Activated)) do
+                        for a, b in pairs(getconnections(UserInputService.TouchTapInWorld)) do
+                            b:Fire()
                         end
-                    end)
+                        v:Function()
+                        Notify("Joined team: Marines")
+                    end
+                else
+                    for i, v in pairs(getconnections(player.PlayerGui.Main.ChooseTeam.Container["Pirates"].Frame.TextButton.Activated)) do
+                        for a, b in pairs(getconnections(UserInputService.TouchTapInWorld)) do
+                            b:Fire()
+                        end
+                        v:Function()
+                        Notify("Joined team: Pirates")
+                    end
                 end
             end
-        end
+        until player.Team ~= nil and game:IsLoaded()
     end
 end)
 
