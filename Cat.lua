@@ -7,7 +7,7 @@ getgenv().config = {
         ["MaxDistance"] = 1000
     },
     ["Setting"] = {
-        ["TweenSpeed"] = 500,
+        ["TweenSpeed"] = 350,
         ["HopForFruit"] = true,
         ["Hop"] = "Smart",
         ["MinPlayers"] = 1,
@@ -186,6 +186,7 @@ end
 
 -- Webhook Function
 local hasSentActiveWebhook = false
+local hasSentSettingsWebhook = false -- Flag mới cho settings
 local function SendWebhook(fruitName, action, position)
     if not getgenv().config["Webhook"]["Send Webhook"] or getgenv().config["Webhook"]["Webhook Url"] == "" then return end
     local webhookUrl = getgenv().config["Webhook"]["Webhook Url"]
@@ -214,6 +215,16 @@ local function SendWebhook(fruitName, action, position)
                 description = "Cắt Tai Hub has been active! 🟢\nServer ID: " .. game.JobId .. "\nPlayers: " .. playerCount .. "\nTime: " .. os.date("!%H:%M:%S", os.time() + 7 * 3600),
                 color = 65280,
                 footer = {text = "One-time activation message"}
+            }}
+        }
+    elseif action == "settings" then
+        data = {
+            username = "Fruit Notifier",
+            embeds = {{
+                title = "Settings Saved",
+                description = "Settings đã được lưu vào file Setting.json! 🟢\nServer ID: " .. game.JobId .. "\nTime: " .. os.date("!%H:%M:%S", os.time() + 7 * 3600),
+                color = 65280,
+                footer = {text = "One-time settings save message"}
             }}
         }
     else
@@ -248,6 +259,31 @@ if not hasSentActiveWebhook and getgenv().config["Webhook"]["Send Webhook"] and 
     hasSentActiveWebhook = true
     Notify("Script đã kích hoạt và gửi thông báo tới Webhook!")
 end
+
+-- Save Settings Function
+local foldername = "Cắt Tai Hub[Fruit]"
+local filename = foldername .. "/Setting.json"
+function saveSettings()
+    local json = HttpService:JSONEncode(getgenv().config) -- Mã hóa config thành JSON
+    if true then -- Điều kiện luôn đúng để giữ logic của bạn
+        if not isfolder(foldername) then
+            makefolder(foldername)
+            Notify("Đã tạo folder: " .. foldername)
+        end
+        writefile(filename, json)
+        Notify("Đã lưu settings vào: " .. filename)
+
+        -- Gửi Webhook một lần khi lưu settings
+        if not hasSentSettingsWebhook and getgenv().config["Webhook"]["Send Webhook"] and getgenv().config["Webhook"]["Webhook Url"] ~= "" then
+            SendWebhook(nil, "settings", Vector3.new(0, 0, 0))
+            hasSentSettingsWebhook = true
+            Notify("Đã gửi thông báo lưu settings tới Webhook!")
+        end
+    end
+end
+
+-- Gọi saveSettings sau khi game load
+saveSettings()
 
 -- Get_Fruit Function
 local function Get_Fruit(Fruit)
@@ -333,7 +369,7 @@ local function SmartHop()
     ServerHopStatusLabel.Text = "Server Hop: Checking current server (ID: " .. game.JobId .. ")"
     local hasFruits, fruitCount, _, rareCount = CheckCurrentServerForFruits()
     local timeInServer = os.time() - serverStartTime
-    local dynamicTimeout = math.max(60, getgenv().config["Setting"]["HopTimeout"] - (fruitCount * 30)) -- Giảm timeout nếu ít fruit
+    local dynamicTimeout = math.max(60, getgenv().config["Setting"]["HopTimeout"] - (fruitCount * 30))
 
     if hasFruits and (rareCount > 0 or timeInServer < dynamicTimeout) then
         ServerHopStatusLabel.Text = "Server Hop: " .. fruitCount .. " fruits found (ID: " .. game.JobId .. ")"
@@ -344,11 +380,10 @@ local function SmartHop()
     local placeId = game.PlaceId
     local cursor = ""
     local attempts = 0
-    local backoff = 0.5 -- Initial backoff time
-    visitedServers[game.JobId] = os.time() -- Đánh dấu server hiện tại với timestamp
+    local backoff = 0.5
+    visitedServers[game.JobId] = os.time()
     ServerHopStatusLabel.Text = "Server Hop: Scanning servers... (Attempts: " .. attempts .. "/" .. getgenv().config["Setting"]["MaxHopAttempts"] .. ")"
 
-    -- Hàm chọn server ưu tiên ít người trước, sau đó thử đông hơn
     local function findBestServer(servers)
         local bestServer = nil
         local minDiff = math.huge
@@ -359,7 +394,7 @@ local function SmartHop()
             if playerCount >= getgenv().config["Setting"]["MinPlayers"] and 
                playerCount <= getgenv().config["Setting"]["MaxPlayers"] and 
                serverId ~= game.JobId and 
-               (not visitedServers[serverId] or (os.time() - visitedServers[serverId]) > 300) then -- Tránh server ghé thăm trong 5 phút
+               (not visitedServers[serverId] or (os.time() - visitedServers[serverId]) > 300) then
                 if diff < minDiff then
                     minDiff = diff
                     bestServer = server
@@ -375,14 +410,14 @@ local function SmartHop()
         end)
 
         if not success then
-            backoff = math.min(backoff * 2, 5) -- Exponential backoff, max 5s
+            backoff = math.min(backoff * 2, 5)
             ServerHopStatusLabel.Text = "Server Hop: API Error, retrying in " .. backoff .. "s..."
             Notify("API Error, retrying in " .. backoff .. "s...")
             task.wait(backoff)
             continue
         end
 
-        backoff = 0.5 -- Reset backoff on success
+        backoff = 0.5
         cursor = response.nextPageCursor or ""
         local targetServer = findBestServer(response.data)
         
@@ -410,9 +445,8 @@ local function SmartHop()
             Notify("No fruits in " .. targetServer.id .. ", hopping again...")
         end
 
-        task.wait(math.random(0.2, 0.5)) -- Giảm thời gian chờ giữa các trang
+        task.wait(math.random(0.2, 0.5))
         if cursor == "" then
-            -- Thử server đông hơn nếu không tìm thấy server ít người
             if attempts > getgenv().config["Setting"]["MaxHopAttempts"] / 2 then
                 getgenv().config["Setting"]["MaxPlayers"] = math.min(getgenv().config["Setting"]["MaxPlayers"] + 2, 12)
                 Notify("Tăng MaxPlayers lên " .. getgenv().config["Setting"]["MaxPlayers"] .. " để thử server đông hơn!")
