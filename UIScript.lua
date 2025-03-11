@@ -7,11 +7,12 @@ local CoreGui = LocalPlayer.PlayerGui
 -- Theme Configuration
 local Themes = {
     Dark = {
-        Background = Color3.fromRGB(15, 15, 15),
+        Background = Color3.fromRGB(20, 20, 20),
         Accent = Color3.fromRGB(255, 0, 255),
         Text = Color3.fromRGB(255, 255, 255),
         SubText = Color3.fromRGB(150, 150, 150),
-        Shadow = Color3.fromRGB(0, 0, 0)
+        Shadow = Color3.fromRGB(0, 0, 0),
+        Highlight = Color3.fromRGB(50, 50, 50)
     }
 }
 local CurrentTheme = Themes.Dark
@@ -95,7 +96,7 @@ local function CircleClick(Button, X, Y)
     end)
 end
 
--- CatLib Library
+-- CatLib Library v4.5
 local CatLib = {}
 
 function CatLib:MakeNotify(NotifyConfig)
@@ -249,10 +250,10 @@ function CatLib:MakeGui(GuiConfig)
     local Main = Instance.new("Frame", DropShadowHolder)
     Main.AnchorPoint = Vector2.new(0.5, 0.5)
     Main.BackgroundColor3 = CurrentTheme.Background
-    Main.BackgroundTransparency = 0.1
+    Main.BackgroundTransparency = 0.05
     Main.Position = UDim2.new(0.5, 0, 0.5, 0)
     Main.Size = UDim2.new(1, -20, 1, -20)
-    Instance.new("UICorner", Main)
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 8)
 
     local Top = Instance.new("Frame", Main)
     Top.BackgroundTransparency = 1
@@ -447,6 +448,7 @@ function CatLib:MakeGui(GuiConfig)
     DropdownSelect.Position = UDim2.new(1, 172, 0.5, 0)
     DropdownSelect.Size = UDim2.new(0, 160, 1, -16)
     DropdownSelect.ClipsDescendants = true
+    Instance.new("UICorner", DropdownSelect).CornerRadius = UDim.new(0, 8)
 
     local DropdownFolder = Instance.new("Folder", DropdownSelect)
     local DropPageLayout = Instance.new("UIPageLayout", DropdownFolder)
@@ -532,6 +534,7 @@ function CatLib:MakeGui(GuiConfig)
             SectionReal.BackgroundTransparency = 0.935
             SectionReal.Position = UDim2.new(0.5, 0, 0, 0)
             SectionReal.Size = UDim2.new(1, 0, 0, 30)
+            Instance.new("UICorner", SectionReal).CornerRadius = UDim.new(0, 6)
 
             local SectionButton = Instance.new("TextButton", SectionReal)
             SectionButton.Text = ""
@@ -606,6 +609,7 @@ function CatLib:MakeGui(GuiConfig)
                 Toggle.BackgroundTransparency = 0.935
                 Toggle.LayoutOrder = CountItem
                 Toggle.Size = UDim2.new(1, 0, 0, 46)
+                Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0, 6)
 
                 local Title = Instance.new("TextLabel", Toggle)
                 Title.Font = Enum.Font.GothamBold
@@ -642,6 +646,7 @@ function CatLib:MakeGui(GuiConfig)
                 ToggleFrame.BackgroundTransparency = 0.92
                 ToggleFrame.Position = UDim2.new(1, -30, 0.5, 0)
                 ToggleFrame.Size = UDim2.new(0, 30, 0, 15)
+                Instance.new("UICorner", ToggleFrame).CornerRadius = UDim.new(1, 0)
 
                 local ToggleCircle = Instance.new("Frame", ToggleFrame)
                 ToggleCircle.BackgroundColor3 = CurrentTheme.Text
@@ -664,12 +669,13 @@ function CatLib:MakeGui(GuiConfig)
                 SettingsBoard.Position = UDim2.new(1, -180, 0, Toggle.AbsolutePosition.Y - Layers.AbsolutePosition.Y + 50)
                 SettingsBoard.Size = UDim2.new(0, 160, 0, 0)
                 SettingsBoard.Visible = false
+                Instance.new("UICorner", SettingsBoard).CornerRadius = UDim.new(0, 8)
 
                 local SettingsList = Instance.new("UIListLayout", SettingsBoard)
                 SettingsList.Padding = UDim.new(0, 3)
 
                 local function UpdateSettingsSize()
-                    local height = 0
+                    local height = 10 -- Padding
                     for _, child in SettingsBoard:GetChildren() do
                         if child:IsA("Frame") then height = height + child.Size.Y.Offset + 3 end
                     end
@@ -686,6 +692,7 @@ function CatLib:MakeGui(GuiConfig)
                     local SettingToggle = Instance.new("Frame", SettingsBoard)
                     SettingToggle.BackgroundColor3 = CurrentTheme.Background
                     SettingToggle.Size = UDim2.new(1, 0, 0, 30)
+                    Instance.new("UICorner", SettingToggle).CornerRadius = UDim.new(0, 6)
 
                     local SettingToggleButton = Instance.new("TextButton", SettingToggle)
                     SettingToggleButton.Text = ""
@@ -706,6 +713,7 @@ function CatLib:MakeGui(GuiConfig)
                     SettingFrame.BackgroundColor3 = CurrentTheme.Background
                     SettingFrame.Position = UDim2.new(1, -5, 0.5, 0)
                     SettingFrame.Size = UDim2.new(0, 30, 0, 15)
+                    Instance.new("UICorner", SettingFrame).CornerRadius = UDim.new(1, 0)
 
                     local SettingCircle = Instance.new("Frame", SettingFrame)
                     SettingCircle.BackgroundColor3 = CurrentTheme.Text
@@ -738,6 +746,7 @@ function CatLib:MakeGui(GuiConfig)
                     local SettingSlider = Instance.new("Frame", SettingsBoard)
                     SettingSlider.BackgroundColor3 = CurrentTheme.Background
                     SettingSlider.Size = UDim2.new(1, 0, 0, 40)
+                    Instance.new("UICorner", SettingSlider).CornerRadius = UDim.new(0, 6)
 
                     local SettingName = Instance.new("TextLabel", SettingSlider)
                     SettingName.Font = Enum.Font.GothamBold
@@ -753,10 +762,12 @@ function CatLib:MakeGui(GuiConfig)
                     SliderFrame.BackgroundTransparency = 0.8
                     SliderFrame.Position = UDim2.new(0, 5, 0, 20)
                     SliderFrame.Size = UDim2.new(1, -10, 0, 3)
+                    Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 2)
 
                     local SliderDraggable = Instance.new("Frame", SliderFrame)
                     SliderDraggable.BackgroundColor3 = GuiConfig.Color
-                    SliderDraggable.Size = UDim2.new((config.Default - config.Min) / (config.Max - config.Min), 0, 0, 1)
+                    SliderDraggable.Size = UDim2.new((config.Default - config.Min) / (config.Max - config.Min), 0, 1, 0)
+                    Instance.new("UICorner", SliderDraggable).CornerRadius = UDim.new(0, 2)
 
                     local SliderCircle = Instance.new("Frame", SliderDraggable)
                     SliderCircle.AnchorPoint = Vector2.new(1, 0.5)
@@ -783,7 +794,7 @@ function CatLib:MakeGui(GuiConfig)
                         if Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
                             local SizeScale = math.clamp((input.Position.X - SliderFrame.AbsolutePosition.X) / SliderFrame.AbsoluteSize.X, 0, 1)
                             SliderFunc.Value = math.floor(config.Min + ((config.Max - config.Min) * SizeScale) / config.Increment) * config.Increment
-                            TweenService:Create(SliderDraggable, TweenInfo.new(0.1), {Size = UDim2.new(SizeScale, 0, 0, 1)}):Play()
+                            TweenService:Create(SliderDraggable, TweenInfo.new(0.1), {Size = UDim2.new(SizeScale, 0, 1, 0)}):Play()
                         end
                     end)
 
@@ -821,6 +832,7 @@ function CatLib:MakeGui(GuiConfig)
                 Toggle.BackgroundTransparency = 0.935
                 Toggle.LayoutOrder = CountItem
                 Toggle.Size = UDim2.new(1, 0, 0, 46)
+                Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0, 6)
 
                 local Title = Instance.new("TextLabel", Toggle)
                 Title.Font = Enum.Font.GothamBold
@@ -858,10 +870,11 @@ function CatLib:MakeGui(GuiConfig)
                 SelectFrame.Position = UDim2.new(1, -7, 0.5, 0)
                 SelectFrame.Size = UDim2.new(0, 148, 0, 30)
                 SelectFrame.LayoutOrder = CountDropdown
+                Instance.new("UICorner", SelectFrame).CornerRadius = UDim.new(0, 6)
 
                 local OptionText = Instance.new("TextLabel", SelectFrame)
                 OptionText.Font = Enum.Font.GothamBold
-                OptionText.Text = table.concat(ToggleConfig.Default, ", ")
+                OptionText.Text = table.concat(ToggleConfig.Default, ", ") ~= "" and table.concat(ToggleConfig.Default, ", ") or "None"
                 OptionText.TextColor3 = CurrentTheme.SubText
                 OptionText.TextSize = 12
                 OptionText.TextXAlignment = Enum.TextXAlignment.Left
@@ -906,7 +919,7 @@ function CatLib:MakeGui(GuiConfig)
                             OptionLabel.Size = UDim2.new(1, -30, 1, 0)
 
                             local CheckIcon = Instance.new("ImageLabel", Option)
-                            CheckIcon.Image = "rbxassetid://7072706620" -- Checkmark icon
+                            CheckIcon.Image = "rbxassetid://7072706620"
                             CheckIcon.BackgroundTransparency = 1
                             CheckIcon.Position = UDim2.new(1, -25, 0, 5)
                             CheckIcon.Size = UDim2.new(0, 20, 0, 20)
@@ -920,7 +933,7 @@ function CatLib:MakeGui(GuiConfig)
                                     table.insert(ToggleFunc.Value, option)
                                 end
                                 CheckIcon.Visible = table.find(ToggleFunc.Value, option) ~= nil
-                                OptionText.Text = table.concat(ToggleFunc.Value, ", ")
+                                OptionText.Text = table.concat(ToggleFunc.Value, ", ") ~= "" and table.concat(ToggleFunc.Value, ", ") or "None"
                                 ToggleConfig.Callback(ToggleFunc.Value)
                             end)
                         end
@@ -942,12 +955,13 @@ function CatLib:MakeGui(GuiConfig)
                 SettingsBoard.Position = UDim2.new(1, -180, 0, Toggle.AbsolutePosition.Y - Layers.AbsolutePosition.Y + 50)
                 SettingsBoard.Size = UDim2.new(0, 160, 0, 0)
                 SettingsBoard.Visible = false
+                Instance.new("UICorner", SettingsBoard).CornerRadius = UDim.new(0, 8)
 
                 local SettingsList = Instance.new("UIListLayout", SettingsBoard)
                 SettingsList.Padding = UDim.new(0, 3)
 
                 local function UpdateSettingsSize()
-                    local height = 0
+                    local height = 10 -- Padding
                     for _, child in SettingsBoard:GetChildren() do
                         if child:IsA("Frame") then height = height + child.Size.Y.Offset + 3 end
                     end
@@ -964,6 +978,7 @@ function CatLib:MakeGui(GuiConfig)
                     local SettingToggle = Instance.new("Frame", SettingsBoard)
                     SettingToggle.BackgroundColor3 = CurrentTheme.Background
                     SettingToggle.Size = UDim2.new(1, 0, 0, 30)
+                    Instance.new("UICorner", SettingToggle).CornerRadius = UDim.new(0, 6)
 
                     local SettingToggleButton = Instance.new("TextButton", SettingToggle)
                     SettingToggleButton.Text = ""
@@ -984,6 +999,7 @@ function CatLib:MakeGui(GuiConfig)
                     SettingFrame.BackgroundColor3 = CurrentTheme.Background
                     SettingFrame.Position = UDim2.new(1, -5, 0.5, 0)
                     SettingFrame.Size = UDim2.new(0, 30, 0, 15)
+                    Instance.new("UICorner", SettingFrame).CornerRadius = UDim.new(1, 0)
 
                     local SettingCircle = Instance.new("Frame", SettingFrame)
                     SettingCircle.BackgroundColor3 = CurrentTheme.Text
@@ -1016,6 +1032,7 @@ function CatLib:MakeGui(GuiConfig)
                     local SettingSlider = Instance.new("Frame", SettingsBoard)
                     SettingSlider.BackgroundColor3 = CurrentTheme.Background
                     SettingSlider.Size = UDim2.new(1, 0, 0, 40)
+                    Instance.new("UICorner", SettingSlider).CornerRadius = UDim.new(0, 6)
 
                     local SettingName = Instance.new("TextLabel", SettingSlider)
                     SettingName.Font = Enum.Font.GothamBold
@@ -1031,10 +1048,12 @@ function CatLib:MakeGui(GuiConfig)
                     SliderFrame.BackgroundTransparency = 0.8
                     SliderFrame.Position = UDim2.new(0, 5, 0, 20)
                     SliderFrame.Size = UDim2.new(1, -10, 0, 3)
+                    Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 2)
 
                     local SliderDraggable = Instance.new("Frame", SliderFrame)
                     SliderDraggable.BackgroundColor3 = GuiConfig.Color
-                    SliderDraggable.Size = UDim2.new((config.Default - config.Min) / (config.Max - config.Min), 0, 0, 1)
+                    SliderDraggable.Size = UDim2.new((config.Default - config.Min) / (config.Max - config.Min), 0, 1, 0)
+                    Instance.new("UICorner", SliderDraggable).CornerRadius = UDim.new(0, 2)
 
                     local SliderCircle = Instance.new("Frame", SliderDraggable)
                     SliderCircle.AnchorPoint = Vector2.new(1, 0.5)
@@ -1061,7 +1080,7 @@ function CatLib:MakeGui(GuiConfig)
                         if Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
                             local SizeScale = math.clamp((input.Position.X - SliderFrame.AbsolutePosition.X) / SliderFrame.AbsoluteSize.X, 0, 1)
                             SliderFunc.Value = math.floor(config.Min + ((config.Max - config.Min) * SizeScale) / config.Increment) * config.Increment
-                            TweenService:Create(SliderDraggable, TweenInfo.new(0.1), {Size = UDim2.new(SizeScale, 0, 0, 1)}):Play()
+                            TweenService:Create(SliderDraggable, TweenInfo.new(0.1), {Size = UDim2.new(SizeScale, 0, 1, 0)}):Play()
                         end
                     end)
 
@@ -1080,7 +1099,7 @@ function CatLib:MakeGui(GuiConfig)
                     AddSetting = function() return Settings end,
                     Set = function(value)
                         ToggleFunc.Value = value
-                        OptionText.Text = table.concat(value, ", ")
+                        OptionText.Text = table.concat(value, ", ") ~= "" and table.concat(value, ", ") or "None"
                         ToggleFunc:UpdateOptions()
                         ToggleConfig.Callback(ToggleFunc.Value)
                     end
@@ -1102,6 +1121,7 @@ function CatLib:MakeGui(GuiConfig)
                 Slider.BackgroundTransparency = 0.935
                 Slider.LayoutOrder = CountItem
                 Slider.Size = UDim2.new(1, 0, 0, 46)
+                Instance.new("UICorner", Slider).CornerRadius = UDim.new(0, 6)
 
                 local Title = Instance.new("TextLabel", Slider)
                 Title.Font = Enum.Font.GothamBold
@@ -1133,10 +1153,12 @@ function CatLib:MakeGui(GuiConfig)
                 SliderFrame.BackgroundTransparency = 0.8
                 SliderFrame.Position = UDim2.new(1, -20, 0.5, 0)
                 SliderFrame.Size = UDim2.new(0, 100, 0, 3)
+                Instance.new("UICorner", SliderFrame).CornerRadius = UDim.new(0, 2)
 
                 local SliderDraggable = Instance.new("Frame", SliderFrame)
                 SliderDraggable.BackgroundColor3 = GuiConfig.Color
-                SliderDraggable.Size = UDim2.new((SliderConfig.Default - SliderConfig.Min) / (SliderConfig.Max - SliderConfig.Min), 0, 0, 1)
+                SliderDraggable.Size = UDim2.new((SliderConfig.Default - SliderConfig.Min) / (SliderConfig.Max - SliderConfig.Min), 0, 1, 0)
+                Instance.new("UICorner", SliderDraggable).CornerRadius = UDim.new(0, 2)
 
                 local SliderCircle = Instance.new("Frame", SliderDraggable)
                 SliderCircle.AnchorPoint = Vector2.new(1, 0.5)
@@ -1150,9 +1172,11 @@ function CatLib:MakeGui(GuiConfig)
                 TextBox.Text = tostring(SliderConfig.Default)
                 TextBox.TextColor3 = CurrentTheme.Text
                 TextBox.TextSize = 13
-                TextBox.BackgroundColor3 = GuiConfig.Color
+                TextBox.BackgroundColor3 = CurrentTheme.Background
+                TextBox.BackgroundTransparency = 0.9
                 TextBox.Position = UDim2.new(1, -155, 0.5, -10)
                 TextBox.Size = UDim2.new(0, 28, 0, 20)
+                Instance.new("UICorner", TextBox).CornerRadius = UDim.new(0, 4)
 
                 local SliderFunc = {Value = SliderConfig.Default}
                 local Dragging = false
@@ -1173,7 +1197,7 @@ function CatLib:MakeGui(GuiConfig)
                         local SizeScale = math.clamp((input.Position.X - SliderFrame.AbsolutePosition.X) / SliderFrame.AbsoluteSize.X, 0, 1)
                         SliderFunc.Value = math.floor(SliderConfig.Min + ((SliderConfig.Max - SliderConfig.Min) * SizeScale) / SliderConfig.Increment) * SliderConfig.Increment
                         TextBox.Text = SliderFunc.Value
-                        TweenService:Create(SliderDraggable, TweenInfo.new(0.1), {Size = UDim2.new(SizeScale, 0, 0, 1)}):Play()
+                        TweenService:Create(SliderDraggable, TweenInfo.new(0.1), {Size = UDim2.new(SizeScale, 0, 1, 0)}):Play()
                     end
                 end)
 
@@ -1181,7 +1205,7 @@ function CatLib:MakeGui(GuiConfig)
                     local val = tonumber(TextBox.Text) or SliderFunc.Value
                     SliderFunc.Value = math.clamp(math.floor(val / SliderConfig.Increment) * SliderConfig.Increment, SliderConfig.Min, SliderConfig.Max)
                     TextBox.Text = SliderFunc.Value
-                    TweenService:Create(SliderDraggable, TweenInfo.new(0.1), {Size = UDim2.new((SliderFunc.Value - SliderConfig.Min) / (SliderConfig.Max - SliderConfig.Min), 0, 0, 1)}):Play()
+                    TweenService:Create(SliderDraggable, TweenInfo.new(0.1), {Size = UDim2.new((SliderFunc.Value - SliderConfig.Min) / (SliderConfig.Max - SliderConfig.Min), 0, 1, 0)}):Play()
                     SliderConfig.Callback(SliderFunc.Value)
                 end)
 
@@ -1191,7 +1215,7 @@ function CatLib:MakeGui(GuiConfig)
                     Set = function(value)
                         SliderFunc.Value = math.clamp(math.floor(value / SliderConfig.Increment) * SliderConfig.Increment, SliderConfig.Min, SliderConfig.Max)
                         TextBox.Text = SliderFunc.Value
-                        TweenService:Create(SliderDraggable, TweenInfo.new(0.1), {Size = UDim2.new((SliderFunc.Value - SliderConfig.Min) / (SliderConfig.Max - SliderConfig.Min), 0, 0, 1)}):Play()
+                        TweenService:Create(SliderDraggable, TweenInfo.new(0.1), {Size = UDim2.new((SliderFunc.Value - SliderConfig.Min) / (SliderConfig.Max - SliderConfig.Min), 0, 1, 0)}):Play()
                         SliderConfig.Callback(SliderFunc.Value)
                     end
                 }
@@ -1210,6 +1234,7 @@ function CatLib:MakeGui(GuiConfig)
                 Dropdown.BackgroundTransparency = 0.935
                 Dropdown.LayoutOrder = CountItem
                 Dropdown.Size = UDim2.new(1, 0, 0, 46)
+                Instance.new("UICorner", Dropdown).CornerRadius = UDim.new(0, 6)
 
                 local Title = Instance.new("TextLabel", Dropdown)
                 Title.Font = Enum.Font.GothamBold
@@ -1247,6 +1272,7 @@ function CatLib:MakeGui(GuiConfig)
                 SelectFrame.Position = UDim2.new(1, -7, 0.5, 0)
                 SelectFrame.Size = UDim2.new(0, 148, 0, 30)
                 SelectFrame.LayoutOrder = CountDropdown
+                Instance.new("UICorner", SelectFrame).CornerRadius = UDim.new(0, 6)
 
                 local OptionText = Instance.new("TextLabel", SelectFrame)
                 OptionText.Font = Enum.Font.GothamBold
@@ -1292,17 +1318,17 @@ function CatLib:MakeGui(GuiConfig)
                             OptionLabel.TextXAlignment = Enum.TextXAlignment.Left
                             OptionLabel.BackgroundTransparency = 1
                             OptionLabel.Position = UDim2.new(0, 8, 0, 0)
-                            OptionLabel.Size = UDim2.new(1, 0, 1, 0)
+                            OptionLabel.Size = UDim2.new(1, -8, 1, 0)
 
                             OptionButton.Activated:Connect(function()
                                 CircleClick(OptionButton, Mouse.X, Mouse.Y)
                                 DropdownFunc.Value = option
                                 OptionText.Text = option
-                                DropdownConfig.Callback(option)
-                                TweenService:Create(MoreBlur, TweenInfo.new(0.3), {BackgroundTransparency = 0.999}):Play()
+                                TweenService:Create(MoreBlur, TweenInfo.new(0.3), {BackgroundTransparency = 1}):Play()
                                 TweenService:Create(DropdownSelect, TweenInfo.new(0.3), {Position = UDim2.new(1, 172, 0.5, 0)}):Play()
                                 task.wait(0.3)
                                 MoreBlur.Visible = false
+                                DropdownConfig.Callback(DropdownFunc.Value)
                             end)
                         end
                         ScrollSelect.CanvasSize = UDim2.new(0, 0, 0, (#DropdownFunc.Options * 33))
@@ -1322,9 +1348,11 @@ function CatLib:MakeGui(GuiConfig)
                 return {
                     Value = DropdownFunc.Value,
                     Set = function(value)
-                        DropdownFunc.Value = value
-                        OptionText.Text = value
-                        DropdownConfig.Callback(DropdownFunc.Value)
+                        if table.find(DropdownFunc.Options, value) then
+                            DropdownFunc.Value = value
+                            OptionText.Text = value
+                            DropdownConfig.Callback(DropdownFunc.Value)
+                        end
                     end,
                     AddOption = function(option)
                         table.insert(DropdownFunc.Options, option)
@@ -1332,13 +1360,13 @@ function CatLib:MakeGui(GuiConfig)
                     end,
                     Clear = function()
                         DropdownFunc.Options = {}
-                        DropdownFunc.Value = nil
+                        DropdownFunc.Value = ""
                         OptionText.Text = ""
                         DropdownFunc:UpdateOptions()
                     end,
                     Refresh = function(options, default)
                         DropdownFunc.Options = options
-                        DropdownFunc.Value = default or options[1]
+                        DropdownFunc.Value = default or options[1] or ""
                         OptionText.Text = DropdownFunc.Value
                         DropdownFunc:UpdateOptions()
                         DropdownConfig.Callback(DropdownFunc.Value)
@@ -1349,7 +1377,7 @@ function CatLib:MakeGui(GuiConfig)
             function Items:AddMultiDropdown(DropdownConfig)
                 DropdownConfig = DropdownConfig or {}
                 DropdownConfig.Title = DropdownConfig.Title or "Multi Dropdown"
-                DropdownConfig.Content = DropdownConfig.Content or "Select options"
+                DropdownConfig.Content = DropdownConfig.Content or "Select multiple options"
                 DropdownConfig.Options = DropdownConfig.Options or {"Option 1", "Option 2"}
                 DropdownConfig.Default = DropdownConfig.Default or {}
                 DropdownConfig.Callback = DropdownConfig.Callback or function() end
@@ -1359,6 +1387,7 @@ function CatLib:MakeGui(GuiConfig)
                 Dropdown.BackgroundTransparency = 0.935
                 Dropdown.LayoutOrder = CountItem
                 Dropdown.Size = UDim2.new(1, 0, 0, 46)
+                Instance.new("UICorner", Dropdown).CornerRadius = UDim.new(0, 6)
 
                 local Title = Instance.new("TextLabel", Dropdown)
                 Title.Font = Enum.Font.GothamBold
@@ -1396,10 +1425,11 @@ function CatLib:MakeGui(GuiConfig)
                 SelectFrame.Position = UDim2.new(1, -7, 0.5, 0)
                 SelectFrame.Size = UDim2.new(0, 148, 0, 30)
                 SelectFrame.LayoutOrder = CountDropdown
+                Instance.new("UICorner", SelectFrame).CornerRadius = UDim.new(0, 6)
 
                 local OptionText = Instance.new("TextLabel", SelectFrame)
                 OptionText.Font = Enum.Font.GothamBold
-                OptionText.Text = table.concat(DropdownConfig.Default, ", ")
+                OptionText.Text = table.concat(DropdownConfig.Default, ", ") ~= "" and table.concat(DropdownConfig.Default, ", ") or "None"
                 OptionText.TextColor3 = CurrentTheme.SubText
                 OptionText.TextSize = 12
                 OptionText.TextXAlignment = Enum.TextXAlignment.Left
@@ -1444,7 +1474,7 @@ function CatLib:MakeGui(GuiConfig)
                             OptionLabel.Size = UDim2.new(1, -30, 1, 0)
 
                             local CheckIcon = Instance.new("ImageLabel", Option)
-                            CheckIcon.Image = "rbxassetid://7072706620" -- Checkmark icon
+                            CheckIcon.Image = "rbxassetid://7072706620"
                             CheckIcon.BackgroundTransparency = 1
                             CheckIcon.Position = UDim2.new(1, -25, 0, 5)
                             CheckIcon.Size = UDim2.new(0, 20, 0, 20)
@@ -1458,7 +1488,7 @@ function CatLib:MakeGui(GuiConfig)
                                     table.insert(DropdownFunc.Value, option)
                                 end
                                 CheckIcon.Visible = table.find(DropdownFunc.Value, option) ~= nil
-                                OptionText.Text = table.concat(DropdownFunc.Value, ", ")
+                                OptionText.Text = table.concat(DropdownFunc.Value, ", ") ~= "" and table.concat(DropdownFunc.Value, ", ") or "None"
                                 DropdownConfig.Callback(DropdownFunc.Value)
                             end)
                         end
@@ -1480,7 +1510,7 @@ function CatLib:MakeGui(GuiConfig)
                     Value = DropdownFunc.Value,
                     Set = function(value)
                         DropdownFunc.Value = value
-                        OptionText.Text = table.concat(value, ", ")
+                        OptionText.Text = table.concat(value, ", ") ~= "" and table.concat(value, ", ") or "None"
                         DropdownFunc:UpdateOptions()
                         DropdownConfig.Callback(DropdownFunc.Value)
                     end,
@@ -1491,13 +1521,13 @@ function CatLib:MakeGui(GuiConfig)
                     Clear = function()
                         DropdownFunc.Options = {}
                         DropdownFunc.Value = {}
-                        OptionText.Text = ""
+                        OptionText.Text = "None"
                         DropdownFunc:UpdateOptions()
                     end,
                     Refresh = function(options, default)
                         DropdownFunc.Options = options
                         DropdownFunc.Value = default or {}
-                        OptionText.Text = table.concat(DropdownFunc.Value, ", ")
+                        OptionText.Text = table.concat(DropdownFunc.Value, ", ") ~= "" and table.concat(DropdownFunc.Value, ", ") or "None"
                         DropdownFunc:UpdateOptions()
                         DropdownConfig.Callback(DropdownFunc.Value)
                     end
