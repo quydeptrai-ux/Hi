@@ -3,7 +3,7 @@ local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
-local CoreGui = LocalPlayer.PlayerGui
+local CoreGui = game:GetService("CoreGui")
 
 -- Hàm hỗ trợ
 local function MakeDraggable(topbarobject, object)
@@ -53,7 +53,8 @@ local function CircleClick(Button, X, Y)
             Size = UDim2.new(0, Size, 0, Size),
             Position = UDim2.new(0.5, -Size/2, 0.5, -Size/2),
             ImageTransparency = 1
-        }):Play():Wait()
+        }):Play()
+        task.wait(0.35)
         Circle:Destroy()
     end)
 end
@@ -280,6 +281,9 @@ function CatLib:MakeGui(GuiConfig)
                 SelectedText.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 SelectedText.TextTruncate = Enum.TextTruncate.AtEnd
 
+                local UICornerSelected = Instance.new("UICorner", SelectedText)
+                UICornerSelected.CornerRadius = UDim.new(0, 4)
+
                 local DropdownIcon = Instance.new("ImageLabel", Dropdown)
                 DropdownIcon.Image = "rbxassetid://16851841101"
                 DropdownIcon.Size = UDim2.new(0, 20, 0, 20)
@@ -305,6 +309,9 @@ function CatLib:MakeGui(GuiConfig)
                 SearchBox.Font = Enum.Font.Gotham
                 SearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
                 SearchBox.TextSize = 12
+
+                local SearchCorner = Instance.new("UICorner", SearchBox)
+                SearchCorner.CornerRadius = UDim.new(0, 4)
 
                 local OptionsScroll = Instance.new("ScrollingFrame", DropdownMenu)
                 OptionsScroll.Size = UDim2.new(1, -10, 1, -60)
@@ -523,7 +530,8 @@ function CatLib:MakeGui(GuiConfig)
                 Circle.Size = UDim2.new(0, 16, 0, 16)
                 Circle.Position = ToggleConfig.Default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
                 Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-                Circle.CornerRadius = UDim.new(0, 8)
+                local CircleCorner = Instance.new("UICorner", Circle)
+                CircleCorner.CornerRadius = UDim.new(0, 8)
 
                 local ToggleButton = Instance.new("TextButton", Toggle)
                 ToggleButton.Size = UDim2.new(1, 0, 1, 0)
@@ -582,15 +590,21 @@ function CatLib:MakeGui(GuiConfig)
                 SliderBar.Position = UDim2.new(0, 10, 1, -15)
                 SliderBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 
+                local SliderBarCorner = Instance.new("UICorner", SliderBar)
+                SliderBarCorner.CornerRadius = UDim.new(0, 3)
+
                 local Fill = Instance.new("Frame", SliderBar)
                 Fill.Size = UDim2.new((SliderConfig.Default - SliderConfig.Min) / (SliderConfig.Max - SliderConfig.Min), 0, 1, 0)
                 Fill.BackgroundColor3 = GuiConfig.Color
+                local FillCorner = Instance.new("UICorner", Fill)
+                FillCorner.CornerRadius = UDim.new(0, 3)
 
                 local Circle = Instance.new("Frame", Fill)
                 Circle.Size = UDim2.new(0, 12, 0, 12)
                 Circle.Position = UDim2.new(1, -6, 0.5, -6)
                 Circle.BackgroundColor3 = GuiConfig.Color
-                Circle.CornerRadius = UDim.new(0, 6)
+                local CircleCorner = Instance.new("UICorner", Circle)
+                CircleCorner.CornerRadius = UDim.new(0, 6)
 
                 local ValueLabel = Instance.new("TextLabel", Slider)
                 ValueLabel.Text = tostring(SliderConfig.Default)
@@ -662,26 +676,99 @@ function CatLib:MakeGui(GuiConfig)
                 ColorPreview.Size = UDim2.new(0, 30, 0, 20)
                 ColorPreview.Position = UDim2.new(1, -40, 0.5, -10)
                 ColorPreview.BackgroundColor3 = ColorConfig.Default
-                ColorPreview.CornerRadius = UDim.new(0, 4)
+                local PreviewCorner = Instance.new("UICorner", ColorPreview)
+                PreviewCorner.CornerRadius = UDim.new(0, 4)
 
                 local PickerMenu = Instance.new("Frame", Main)
                 PickerMenu.Size = UDim2.new(0, 150, 0, 0)
                 PickerMenu.Position = UDim2.new(0, ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsolutePosition.Y + 35)
                 PickerMenu.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
                 PickerMenu.Visible = false
+                PickerMenu.ClipsDescendants = true
 
                 local PickerCorner = Instance.new("UICorner", PickerMenu)
                 PickerCorner.CornerRadius = UDim.new(0, 6)
 
-                local HueBar = Instance.new("Frame", PickerMenu)
-                HueBar.Size = UDim2.new(1, -10, 0, 10)
-                HueBar.Position = UDim2.new(0, 5, 0, 5)
-                HueBar.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-
-                local SaturationValue = Instance.new("Frame", PickerMenu)
+                local SaturationValue = Instance.new("ImageLabel", PickerMenu)
                 SaturationValue.Size = UDim2.new(1, -10, 0, 100)
-                SaturationValue.Position = UDim2.new(0, 5, 0, 20)
-                SaturationValue.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                SaturationValue.Position = UDim2.new(0, 5, 0, 5)
+                SaturationValue.Image = "rbxassetid://4155802443"
+                SaturationValue.BackgroundTransparency = 1
+
+                local HueBar = Instance.new("ImageLabel", PickerMenu)
+                HueBar.Size = UDim2.new(1, -10, 0, 10)
+                HueBar.Position = UDim2.new(0, 5, 0, 110)
+                HueBar.Image = "rbxassetid://4155802444"
+                HueBar.BackgroundTransparency = 1
+
+                local SVSelector = Instance.new("Frame", SaturationValue)
+                SVSelector.Size = UDim2.new(0, 6, 0, 6)
+                SVSelector.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                SVSelector.BorderSizePixel = 1
+                SVSelector.BorderColor3 = Color3.fromRGB(0, 0, 0)
+
+                local HueSelector = Instance.new("Frame", HueBar)
+                HueSelector.Size = UDim2.new(0, 6, 0, 6)
+                HueSelector.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+                HueSelector.BorderSizePixel = 1
+                HueSelector.BorderColor3 = Color3.fromRGB(0, 0, 0)
+
+                local function UpdateColor()
+                    local huePos = HueSelector.Position.X.Scale
+                    local svPos = SVSelector.Position
+                    local h = huePos
+                    local s = svPos.X.Scale
+                    local v = 1 - svPos.Y.Scale
+                    local color = Color3.fromHSV(h, s, v)
+                    ColorFunc.Value = color
+                    ColorPreview.BackgroundColor3 = color
+                    ColorConfig.Callback(color)
+                end
+
+                local function SetInitialPosition()
+                    local h, s, v = ColorConfig.Default:ToHSV()
+                    HueSelector.Position = UDim2.new(h, -3, 0, -3)
+                    SVSelector.Position = UDim2.new(s, -3, 1 - v, -3)
+                    UpdateColor()
+                end
+                SetInitialPosition()
+
+                local SVDragging, HueDragging = false, false
+                SaturationValue.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        SVDragging = true
+                    end
+                end)
+                SaturationValue.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        SVDragging = false
+                    end
+                end)
+                HueBar.InputBegan:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        HueDragging = true
+                    end
+                end)
+                HueBar.InputEnded:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                        HueDragging = false
+                    end
+                end)
+
+                UserInputService.InputChanged:Connect(function(input)
+                    if input.UserInputType == Enum.UserInputType.MouseMovement then
+                        if SVDragging then
+                            local pos = math.clamp((input.Position.X - SaturationValue.AbsolutePosition.X) / SaturationValue.AbsoluteSize.X, 0, 1)
+                            local posY = math.clamp((input.Position.Y - SaturationValue.AbsolutePosition.Y) / SaturationValue.AbsoluteSize.Y, 0, 1)
+                            SVSelector.Position = UDim2.new(pos, -3, posY, -3)
+                            UpdateColor()
+                        elseif HueDragging then
+                            local pos = math.clamp((input.Position.X - HueBar.AbsolutePosition.X) / HueBar.AbsoluteSize.X, 0, 1)
+                            HueSelector.Position = UDim2.new(pos, -3, 0, -3)
+                            UpdateColor()
+                        end
+                    end
+                end)
 
                 local ColorPickerButton = Instance.new("TextButton", ColorPicker)
                 ColorPickerButton.Size = UDim2.new(1, 0, 1, 0)
@@ -692,6 +779,7 @@ function CatLib:MakeGui(GuiConfig)
                     CircleClick(ColorPickerButton, Mouse.X, Mouse.Y)
                     PickerMenu.Visible = not PickerMenu.Visible
                     if PickerMenu.Visible then
+                        PickerMenu.Position = UDim2.new(0, ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsolutePosition.Y + 35)
                         TweenService:Create(PickerMenu, TweenInfo.new(0.3, Enum.EasingStyle.Elastic), {Size = UDim2.new(0, 150, 0, 130)}):Play()
                     else
                         TweenService:Create(PickerMenu, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {Size = UDim2.new(0, 150, 0, 0)}):Play()
@@ -701,11 +789,77 @@ function CatLib:MakeGui(GuiConfig)
                 function ColorFunc:Set(color)
                     ColorFunc.Value = color
                     ColorPreview.BackgroundColor3 = color
+                    SetInitialPosition()
                     ColorConfig.Callback(color)
                 end
 
                 ItemCount = ItemCount + 1
                 return ColorFunc
+            end
+
+            function Items:AddKeybind(KeybindConfig)
+                KeybindConfig = KeybindConfig or {}
+                KeybindConfig.Title = KeybindConfig.Title or "Keybind"
+                KeybindConfig.Default = KeybindConfig.Default or Enum.KeyCode.E
+                KeybindConfig.Callback = KeybindConfig.Callback or function() print("Key pressed") end
+
+                local KeybindFunc = {Value = KeybindConfig.Default}
+
+                local Keybind = Instance.new("Frame", ItemsContainer)
+                Keybind.Size = UDim2.new(1, 0, 0, 35)
+                Keybind.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+                Keybind.LayoutOrder = ItemCount
+
+                local UICorner = Instance.new("UICorner", Keybind)
+                UICorner.CornerRadius = UDim.new(0, 6)
+
+                local Title = Instance.new("TextLabel", Keybind)
+                Title.Text = KeybindConfig.Title
+                Title.Font = Enum.Font.GothamBold
+                Title.TextColor3 = Color3.fromRGB(230, 230, 230)
+                Title.TextSize = 14
+                Title.Size = UDim2.new(1, -100, 1, 0)
+                Title.Position = UDim2.new(0, 10, 0, 0)
+                Title.BackgroundTransparency = 1
+
+                local KeyText = Instance.new("TextButton", Keybind)
+                KeyText.Size = UDim2.new(0, 80, 0, 25)
+                KeyText.Position = UDim2.new(1, -90, 0.5, -12)
+                KeyText.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+                KeyText.Text = KeybindConfig.Default.Name
+                KeyText.Font = Enum.Font.Gotham
+                KeyText.TextColor3 = Color3.fromRGB(255, 255, 255)
+                KeyText.TextSize = 12
+
+                local KeyCorner = Instance.new("UICorner", KeyText)
+                KeyCorner.CornerRadius = UDim.new(0, 4)
+
+                local WaitingForBind = false
+                KeyText.Activated:Connect(function()
+                    CircleClick(KeyText, Mouse.X, Mouse.Y)
+                    WaitingForBind = true
+                    KeyText.Text = "..."
+                end)
+
+                UserInputService.InputBegan:Connect(function(input)
+                    if WaitingForBind and input.UserInputType == Enum.UserInputType.Keyboard then
+                        KeybindFunc.Value = input.KeyCode
+                        KeyText.Text = input.KeyCode.Name
+                        WaitingForBind = false
+                        KeybindConfig.Callback()
+                    elseif input.KeyCode == KeybindFunc.Value and not WaitingForBind then
+                        KeybindConfig.Callback()
+                    end
+                end)
+
+                function KeybindFunc:Set(key)
+                    KeybindFunc.Value = key
+                    KeyText.Text = key.Name
+                    KeybindConfig.Callback()
+                end
+
+                ItemCount = ItemCount + 1
+                return KeybindFunc
             end
 
             SectionCount = SectionCount + 1
