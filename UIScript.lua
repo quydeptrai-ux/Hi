@@ -1,17 +1,32 @@
-local UserInputService = game:GetService("UserInputService")
+ocal UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local CoreGui = game:GetService("CoreGui")
 
--- Utility Functions
+-- Hệ thống quản lý Tween để tái sử dụng
+local TweenCache = {}
+
+local function GetTween(object, info, properties)
+    local key = tostring(object) .. tostring(info)
+    if not TweenCache[key] then
+        TweenCache[key] = TweenService:Create(object, info, properties)
+    else
+        TweenCache[key]:Cancel()
+        TweenCache[key] = TweenService:Create(object, info, properties)
+    end
+    TweenCache[key]:Play()
+    return TweenCache[key]
+end
+
+-- Hàm hỗ trợ
 local function MakeDraggable(topbarobject, object)
     local Dragging, DragInput, DragStart, StartPosition
     local function UpdatePos(input)
         local Delta = input.Position - DragStart
         local pos = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
-        TweenService:Create(object, TweenInfo.new(0.15, Enum.EasingStyle.Sine), {Position = pos}):Play()
+        GetTween(object, TweenInfo.new(0.15, Enum.EasingStyle.Sine), {Position = pos})
     end
     topbarobject.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
@@ -38,8 +53,8 @@ local function CircleClick(Button, X, Y)
         Button.ClipsDescendants = true
         local Circle = Instance.new("ImageLabel")
         Circle.Image = "rbxassetid://266543268"
-        Circle.ImageColor3 = Color3.fromRGB(150, 150, 150)
-        Circle.ImageTransparency = 0.5
+        Circle.ImageColor3 = Color3.fromRGB(100, 100, 100)
+        Circle.ImageTransparency = 0.6
         Circle.BackgroundTransparency = 1
         Circle.ZIndex = 10
         Circle.Parent = Button
@@ -49,12 +64,12 @@ local function CircleClick(Button, X, Y)
         Circle.Position = UDim2.new(0, NewX, 0, NewY)
         local Size = math.max(Button.AbsoluteSize.X, Button.AbsoluteSize.Y) * 2
         
-        TweenService:Create(Circle, TweenInfo.new(0.4, Enum.EasingStyle.Exponential, Enum.EasingDirection.Out), {
+        GetTween(Circle, TweenInfo.new(0.35, Enum.EasingStyle.Elastic), {
             Size = UDim2.new(0, Size, 0, Size),
             Position = UDim2.new(0.5, -Size/2, 0.5, -Size/2),
             ImageTransparency = 1
-        }):Play()
-        task.wait(0.4)
+        })
+        task.wait(0.35)
         Circle:Destroy()
     end)
 end
@@ -66,6 +81,12 @@ function CatLib:MakeGui(GuiConfig)
     GuiConfig.NameHub = GuiConfig.NameHub or "Cat Hub"
     GuiConfig.Color = GuiConfig.Color or Color3.fromRGB(255, 0, 255)
     GuiConfig["Tab Width"] = GuiConfig["Tab Width"] or 130
+    GuiConfig.Theme = GuiConfig.Theme or { -- Hệ thống theme
+        Background = Color3.fromRGB(20, 20, 20),
+        Accent = GuiConfig.Color,
+        TextColor = Color3.fromRGB(255, 255, 255),
+        Secondary = Color3.fromRGB(35, 35, 35)
+    }
     local GuiFunc = {}
 
     local HirimiGui = Instance.new("ScreenGui")
@@ -74,50 +95,39 @@ function CatLib:MakeGui(GuiConfig)
     HirimiGui.Parent = CoreGui
 
     local Main = Instance.new("Frame")
-    Main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-    Main.Size = UDim2.new(0, 600, 0, 500)
-    Main.Position = UDim2.new(0.5, -300, 0.5, -250)
+    Main.BackgroundColor3 = GuiConfig.Theme.Background
+    Main.Size = UDim2.new(0, 550, 0, 450)
+    Main.Position = UDim2.new(0.5, -275, 0.5, -225)
     Main.Parent = HirimiGui
 
     local UICorner = Instance.new("UICorner", Main)
-    UICorner.CornerRadius = UDim.new(0, 12)
+    UICorner.CornerRadius = UDim.new(0, 10)
     
     local UIGradient = Instance.new("UIGradient", Main)
     UIGradient.Color = ColorSequence.new{GuiConfig.Color, Color3.fromRGB(30, 30, 30)}
     UIGradient.Rotation = 45
 
-    local Shadow = Instance.new("ImageLabel", Main)
-    Shadow.Image = "rbxassetid://1316045217"
-    Shadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    Shadow.ImageTransparency = 0.6
-    Shadow.Size = UDim2.new(1, 60, 1, 60)
-    Shadow.Position = UDim2.new(0, -30, 0, -30)
-    Shadow.BackgroundTransparency = 1
-    Shadow.ZIndex = -1
-
     local Top = Instance.new("Frame", Main)
-    Top.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-    Top.Size = UDim2.new(1, 0, 0, 50)
+    Top.BackgroundColor3 = GuiConfig.Theme.Secondary
+    Top.Size = UDim2.new(1, 0, 0, 40)
     Top.BorderSizePixel = 0
-    local TopCorner = Instance.new("UICorner", Top)
-    TopCorner.CornerRadius = UDim.new(0, 12)
 
     local Title = Instance.new("TextLabel", Top)
     Title.Text = GuiConfig.NameHub
     Title.Font = Enum.Font.GothamBold
-    Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-    Title.TextSize = 18
+    Title.TextColor3 = GuiConfig.Theme.TextColor
+    Title.TextSize = 16
     Title.Size = UDim2.new(0.5, 0, 1, 0)
-    Title.Position = UDim2.new(0, 15, 0, 0)
+    Title.Position = UDim2.new(0, 10, 0, 0)
     Title.BackgroundTransparency = 1
 
     local Close = Instance.new("TextButton", Top)
     Close.Text = "X"
-    Close.Font = Enum.Font.GothamBold
+    Close.Font = Enum.Font.Gotham
     Close.TextColor3 = Color3.fromRGB(255, 100, 100)
-    Close.TextSize = 16
-    Close.Size = UDim2.new(0, 40, 0, 40)
-    Close.Position = UDim2.new(1, -45, 0.5, -20)
+    Close.TextSize = 14
+    Close.Size = UDim2.new(0, 30, 0, 30)
+    Close.Position = UDim2.new(1, -35, 0.5, -15)
     Close.BackgroundTransparency = 1
     Close.Activated:Connect(function()
         CircleClick(Close, Mouse.X, Mouse.Y)
@@ -128,8 +138,8 @@ function CatLib:MakeGui(GuiConfig)
 
     local TabsContainer = Instance.new("Frame", Main)
     TabsContainer.BackgroundTransparency = 1
-    TabsContainer.Size = UDim2.new(0, GuiConfig["Tab Width"], 1, -60)
-    TabsContainer.Position = UDim2.new(0, 10, 0, 50)
+    TabsContainer.Size = UDim2.new(0, GuiConfig["Tab Width"], 1, -50)
+    TabsContainer.Position = UDim2.new(0, 10, 0, 40)
 
     local TabsScroll = Instance.new("ScrollingFrame", TabsContainer)
     TabsScroll.Size = UDim2.new(1, 0, 1, 0)
@@ -137,12 +147,12 @@ function CatLib:MakeGui(GuiConfig)
     TabsScroll.ScrollBarThickness = 0
 
     local UIListLayout = Instance.new("UIListLayout", TabsScroll)
-    UIListLayout.Padding = UDim.new(0, 8)
+    UIListLayout.Padding = UDim.new(0, 5)
 
     local Pages = Instance.new("Frame", Main)
     Pages.BackgroundTransparency = 1
-    Pages.Size = UDim2.new(1, -GuiConfig["Tab Width"] - 20, 1, -60)
-    Pages.Position = UDim2.new(0, GuiConfig["Tab Width"] + 20, 0, 50)
+    Pages.Size = UDim2.new(1, -GuiConfig["Tab Width"] - 20, 1, -50)
+    Pages.Position = UDim2.new(0, GuiConfig["Tab Width"] + 20, 0, 40)
 
     local PageFolder = Instance.new("Folder", Pages)
     local PageLayout = Instance.new("UIPageLayout", PageFolder)
@@ -158,62 +168,51 @@ function CatLib:MakeGui(GuiConfig)
         TabConfig.Icon = TabConfig.Icon or "rbxassetid://6034830835"
 
         local TabButton = Instance.new("TextButton", TabsScroll)
-        TabButton.Size = UDim2.new(1, -10, 0, 40)
-        TabButton.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+        TabButton.Size = UDim2.new(1, -10, 0, 35)
+        TabButton.BackgroundColor3 = GuiConfig.Theme.Secondary
         TabButton.Text = ""
         TabButton.LayoutOrder = TabCount
 
         local UICorner = Instance.new("UICorner", TabButton)
-        UICorner.CornerRadius = UDim.new(0, 8)
+        UICorner.CornerRadius = UDim.new(0, 6)
 
         local Icon = Instance.new("ImageLabel", TabButton)
         Icon.Image = TabConfig.Icon
-        Icon.Size = UDim2.new(0, 24, 0, 24)
-        Icon.Position = UDim2.new(0, 8, 0.5, -12)
+        Icon.Size = UDim2.new(0, 20, 0, 20)
+        Icon.Position = UDim2.new(0, 5, 0.5, -10)
         Icon.BackgroundTransparency = 1
 
         local TabName = Instance.new("TextLabel", TabButton)
         TabName.Text = TabConfig.Name
         TabName.Font = Enum.Font.GothamBold
-        TabName.TextColor3 = Color3.fromRGB(200, 200, 200)
-        TabName.TextSize = 15
-        TabName.Size = UDim2.new(1, -40, 1, 0)
-        TabName.Position = UDim2.new(0, 40, 0, 0)
+        TabName.TextColor3 = GuiConfig.Theme.TextColor
+        TabName.TextSize = 14
+        TabName.Size = UDim2.new(1, -30, 1, 0)
+        TabName.Position = UDim2.new(0, 30, 0, 0)
         TabName.BackgroundTransparency = 1
 
         local Page = Instance.new("ScrollingFrame", PageFolder)
         Page.Size = UDim2.new(1, 0, 1, 0)
         Page.BackgroundTransparency = 1
-        Page.ScrollBarThickness = 2
-        Page.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
+        Page.ScrollBarThickness = 0
         Page.LayoutOrder = TabCount
 
         local PageList = Instance.new("UIListLayout", Page)
-        PageList.Padding = UDim.new(0, 10)
+        PageList.Padding = UDim.new(0, 8)
 
         if TabCount == 0 then
-            TabButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+            TabButton.BackgroundColor3 = GuiConfig.Theme.Accent
             PageLayout:JumpTo(Page)
         end
 
-        TabButton.MouseEnter:Connect(function()
-            if TabButton.BackgroundColor3 ~= Color3.fromRGB(50, 50, 50) then
-                TweenService:Create(TabButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(45, 45, 45)}):Play()
-            end
-        end)
-        TabButton.MouseLeave:Connect(function()
-            if TabButton.BackgroundColor3 ~= Color3.fromRGB(50, 50, 50) then
-                TweenService:Create(TabButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
-            end
-        end)
         TabButton.Activated:Connect(function()
             CircleClick(TabButton, Mouse.X, Mouse.Y)
             for _, tab in TabsScroll:GetChildren() do
                 if tab:IsA("TextButton") then
-                    TweenService:Create(tab, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(35, 35, 35)}):Play()
+                    GetTween(tab, TweenInfo.new(0.2), {BackgroundColor3 = GuiConfig.Theme.Secondary})
                 end
             end
-            TweenService:Create(TabButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+            GetTween(TabButton, TweenInfo.new(0.2), {BackgroundColor3 = GuiConfig.Theme.Accent})
             PageLayout:JumpTo(Page)
         end)
 
@@ -225,155 +224,176 @@ function CatLib:MakeGui(GuiConfig)
 
             local Section = Instance.new("Frame", Page)
             Section.Size = UDim2.new(1, -10, 0, 0)
-            Section.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+            Section.BackgroundColor3 = GuiConfig.Theme.Secondary
             Section.LayoutOrder = SectionCount
             Section.AutomaticSize = Enum.AutomaticSize.Y
 
             local UICorner = Instance.new("UICorner", Section)
-            UICorner.CornerRadius = UDim.new(0, 8)
+            UICorner.CornerRadius = UDim.new(0, 6)
 
             local SectionTitle = Instance.new("TextLabel", Section)
             SectionTitle.Text = SectionName
             SectionTitle.Font = Enum.Font.GothamBold
-            SectionTitle.TextColor3 = GuiConfig.Color
+            SectionTitle.TextColor3 = GuiConfig.Theme.Accent
             SectionTitle.TextSize = 16
-            SectionTitle.Size = UDim2.new(1, 0, 0, 30)
+            SectionTitle.Size = UDim2.new(1, 0, 0, 25)
             SectionTitle.BackgroundTransparency = 1
 
             local ItemsContainer = Instance.new("Frame", Section)
-            ItemsContainer.Size = UDim2.new(1, -10, 1, -35)
-            ItemsContainer.Position = UDim2.new(0, 5, 0, 30)
+            ItemsContainer.Size = UDim2.new(1, -10, 1, -30)
+            ItemsContainer.Position = UDim2.new(0, 5, 0, 25)
             ItemsContainer.BackgroundTransparency = 1
 
             local ItemsList = Instance.new("UIListLayout", ItemsContainer)
-            ItemsList.Padding = UDim.new(0, 8)
+            ItemsList.Padding = UDim.new(0, 5)
 
             local Items = {}
             local ItemCount = 0
-
-            function Items:AddParagraph(ParagraphConfig)
-                ParagraphConfig = ParagraphConfig or {}
-                ParagraphConfig.Title = ParagraphConfig.Title or "Paragraph"
-                ParagraphConfig.Content = ParagraphConfig.Content or "This is a paragraph."
-
-                local Paragraph = Instance.new("Frame", ItemsContainer)
-                Paragraph.Size = UDim2.new(1, 0, 0, 0)
-                Paragraph.BackgroundTransparency = 1
-                Paragraph.LayoutOrder = ItemCount
-                Paragraph.AutomaticSize = Enum.AutomaticSize.Y
-
-                local Title = Instance.new("TextLabel", Paragraph)
-                Title.Text = ParagraphConfig.Title
-                Title.Font = Enum.Font.GothamBold
-                Title.TextColor3 = Color3.fromRGB(230, 230, 230)
-                Title.TextSize = 14
-                Title.Size = UDim2.new(1, 0, 0, 20)
-                Title.BackgroundTransparency = 1
-
-                local Content = Instance.new("TextLabel", Paragraph)
-                Content.Text = ParagraphConfig.Content
-                Content.Font = Enum.Font.Gotham
-                Content.TextColor3 = Color3.fromRGB(180, 180, 180)
-                Content.TextSize = 12
-                Content.Size = UDim2.new(1, 0, 0, 0)
-                Content.Position = UDim2.new(0, 0, 0, 20)
-                Content.BackgroundTransparency = 1
-                Content.TextWrapped = true
-                Content.AutomaticSize = Enum.AutomaticSize.Y
-
-                ItemCount = ItemCount + 1
-                return {}
-            end
 
             function Items:AddButton(ButtonConfig)
                 ButtonConfig = ButtonConfig or {}
                 ButtonConfig.Title = ButtonConfig.Title or "Button"
                 ButtonConfig.Callback = ButtonConfig.Callback or function() end
+                ButtonConfig.OnHoverEnter = ButtonConfig.OnHoverEnter or function() end
+                ButtonConfig.OnHoverExit = ButtonConfig.OnHoverExit or function() end
+                ButtonConfig.Cooldown = ButtonConfig.Cooldown or 0
+                ButtonConfig.Tooltip = ButtonConfig.Tooltip or ""
+                ButtonConfig.AnimationStyle = ButtonConfig.AnimationStyle or Enum.EasingStyle.Sine
 
+                local lastClick = 0
                 local Button = Instance.new("TextButton", ItemsContainer)
-                Button.Size = UDim2.new(1, 0, 0, 40)
+                Button.Size = UDim2.new(1, 0, 0, 35)
                 Button.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 Button.Text = ButtonConfig.Title
                 Button.Font = Enum.Font.GothamBold
-                Button.TextColor3 = Color3.fromRGB(255, 255, 255)
-                Button.TextSize = 15
+                Button.TextColor3 = GuiConfig.Theme.TextColor
+                Button.TextSize = 14
                 Button.LayoutOrder = ItemCount
 
                 local UICorner = Instance.new("UICorner", Button)
-                UICorner.CornerRadius = UDim.new(0, 8)
+                UICorner.CornerRadius = UDim.new(0, 6)
 
+                local TooltipLabel = Instance.new("TextLabel", Button)
+                TooltipLabel.Visible = false
+                TooltipLabel.BackgroundColor3 = GuiConfig.Theme.Secondary
+                TooltipLabel.Text = ButtonConfig.Tooltip
+                TooltipLabel.Size = UDim2.new(0, 100, 0, 20)
+                TooltipLabel.Position = UDim2.new(0, 0, 1, 5)
+                TooltipLabel.TextColor3 = GuiConfig.Theme.TextColor
+                TooltipLabel.Font = Enum.Font.Gotham
+                TooltipLabel.TextSize = 12
+
+                local tweenInfo = TweenInfo.new(0.2, ButtonConfig.AnimationStyle)
                 Button.MouseEnter:Connect(function()
-                    TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = GuiConfig.Color}):Play()
+                    GetTween(Button, tweenInfo, {BackgroundColor3 = GuiConfig.Theme.Accent})
+                    TooltipLabel.Visible = true
+                    ButtonConfig.OnHoverEnter()
                 end)
                 Button.MouseLeave:Connect(function()
-                    TweenService:Create(Button, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(50, 50, 50)}):Play()
+                    GetTween(Button, tweenInfo, {BackgroundColor3 = Color3.fromRGB(50, 50, 50)})
+                    TooltipLabel.Visible = false
+                    ButtonConfig.OnHoverExit()
                 end)
                 Button.Activated:Connect(function()
-                    CircleClick(Button, Mouse.X, Mouse.Y)
-                    ButtonConfig.Callback()
+                    if tick() - lastClick >= ButtonConfig.Cooldown then
+                        CircleClick(Button, Mouse.X, Mouse.Y)
+                        ButtonConfig.Callback()
+                        lastClick = tick()
+                    end
                 end)
 
                 ItemCount = ItemCount + 1
-                return {}
+                return {
+                    SetText = function(newText) Button.Text = newText end,
+                    SetCooldown = function(newCooldown) ButtonConfig.Cooldown = newCooldown end
+                }
             end
 
             function Items:AddToggle(ToggleConfig)
                 ToggleConfig = ToggleConfig or {}
                 ToggleConfig.Title = ToggleConfig.Title or "Toggle"
                 ToggleConfig.Default = ToggleConfig.Default or false
-                ToggleConfig.Callback = ToggleConfig.Callback or function(value) print(value) end
+                ToggleConfig.Indeterminate = ToggleConfig.Indeterminate or false
+                ToggleConfig.Callback = ToggleConfig.Callback or function(value) end
+                ToggleConfig.Tooltip = ToggleConfig.Tooltip or ""
+                ToggleConfig.AnimationStyle = ToggleConfig.AnimationStyle or Enum.EasingStyle.Sine
 
-                local ToggleFunc = {Value = ToggleConfig.Default}
+                local ToggleFunc = {Value = ToggleConfig.Default, Indeterminate = ToggleConfig.Indeterminate}
 
                 local Toggle = Instance.new("Frame", ItemsContainer)
-                Toggle.Size = UDim2.new(1, 0, 0, 40)
+                Toggle.Size = UDim2.new(1, 0, 0, 35)
                 Toggle.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 Toggle.LayoutOrder = ItemCount
 
                 local UICorner = Instance.new("UICorner", Toggle)
-                UICorner.CornerRadius = UDim.new(0, 8)
+                UICorner.CornerRadius = UDim.new(0, 6)
 
                 local Title = Instance.new("TextLabel", Toggle)
                 Title.Text = ToggleConfig.Title
                 Title.Font = Enum.Font.GothamBold
-                Title.TextColor3 = Color3.fromRGB(230, 230, 230)
-                Title.TextSize = 15
+                Title.TextColor3 = GuiConfig.Theme.TextColor
+                Title.TextSize = 14
                 Title.Size = UDim2.new(1, -50, 1, 0)
                 Title.Position = UDim2.new(0, 10, 0, 0)
                 Title.BackgroundTransparency = 1
 
                 local Switch = Instance.new("Frame", Toggle)
-                Switch.Size = UDim2.new(0, 45, 0, 24)
-                Switch.Position = UDim2.new(1, -50, 0.5, -12)
-                Switch.BackgroundColor3 = ToggleConfig.Default and GuiConfig.Color or Color3.fromRGB(80, 80, 80)
+                Switch.Size = UDim2.new(0, 40, 0, 20)
+                Switch.Position = UDim2.new(1, -45, 0.5, -10)
+                Switch.BackgroundColor3 = ToggleConfig.Default and GuiConfig.Theme.Accent or Color3.fromRGB(80, 80, 80)
 
                 local SwitchCorner = Instance.new("UICorner", Switch)
-                SwitchCorner.CornerRadius = UDim.new(0, 12)
+                SwitchCorner.CornerRadius = UDim.new(0, 10)
 
                 local Circle = Instance.new("Frame", Switch)
-                Circle.Size = UDim2.new(0, 20, 0, 20)
-                Circle.Position = ToggleConfig.Default and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)
+                Circle.Size = UDim2.new(0, 16, 0, 16)
+                Circle.Position = ToggleConfig.Default and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)
                 Circle.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 local CircleCorner = Instance.new("UICorner", Circle)
-                CircleCorner.CornerRadius = UDim.new(0, 10)
+                CircleCorner.CornerRadius = UDim.new(0, 8)
+
+                local TooltipLabel = Instance.new("TextLabel", Toggle)
+                TooltipLabel.Visible = false
+                TooltipLabel.BackgroundColor3 = GuiConfig.Theme.Secondary
+                TooltipLabel.Text = ToggleConfig.Tooltip
+                TooltipLabel.Size = UDim2.new(0, 100, 0, 20)
+                TooltipLabel.Position = UDim2.new(0, 0, 1, 5)
+                TooltipLabel.TextColor3 = GuiConfig.Theme.TextColor
+                TooltipLabel.Font = Enum.Font.Gotham
+                TooltipLabel.TextSize = 12
 
                 local ToggleButton = Instance.new("TextButton", Toggle)
                 ToggleButton.Size = UDim2.new(1, 0, 1, 0)
                 ToggleButton.BackgroundTransparency = 1
                 ToggleButton.Text = ""
 
+                ToggleButton.MouseEnter:Connect(function()
+                    TooltipLabel.Visible = true
+                end)
+                ToggleButton.MouseLeave:Connect(function()
+                    TooltipLabel.Visible = false
+                end)
+
                 ToggleButton.Activated:Connect(function()
                     CircleClick(ToggleButton, Mouse.X, Mouse.Y)
-                    ToggleFunc.Value = not ToggleFunc.Value
-                    TweenService:Create(Switch, TweenInfo.new(0.2), {BackgroundColor3 = ToggleFunc.Value and GuiConfig.Color or Color3.fromRGB(80, 80, 80)}):Play()
-                    TweenService:Create(Circle, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {Position = ToggleFunc.Value and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)}):Play()
+                    if ToggleFunc.Indeterminate then
+                        ToggleFunc.Indeterminate = false
+                        ToggleFunc.Value = true
+                    else
+                        ToggleFunc.Value = not ToggleFunc.Value
+                    end
+                    local tweenInfo = TweenInfo.new(0.2, ToggleConfig.AnimationStyle)
+                    GetTween(Switch, tweenInfo, {BackgroundColor3 = ToggleFunc.Value and GuiConfig.Theme.Accent or Color3.fromRGB(80, 80, 80)})
+                    GetTween(Circle, tweenInfo, {Position = ToggleFunc.Value and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)})
                     ToggleConfig.Callback(ToggleFunc.Value)
                 end)
 
-                function ToggleFunc:Set(value)
+                function ToggleFunc:Set(value, indeterminate)
                     ToggleFunc.Value = value
-                    TweenService:Create(Switch, TweenInfo.new(0.2), {BackgroundColor3 = value and GuiConfig.Color or Color3.fromRGB(80, 80, 80)}):Play()
-                    TweenService:Create(Circle, TweenInfo.new(0.2, Enum.EasingStyle.Sine), {Position = value and UDim2.new(1, -22, 0.5, -10) or UDim2.new(0, 2, 0.5, -10)}):Play()
+                    ToggleFunc.Indeterminate = indeterminate or false
+                    local tweenInfo = TweenInfo.new(0.2, ToggleConfig.AnimationStyle)
+                    GetTween(Switch, tweenInfo, {BackgroundColor3 = value and GuiConfig.Theme.Accent or Color3.fromRGB(80, 80, 80)})
+                    GetTween(Circle, tweenInfo, {Position = value and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8)})
                     ToggleConfig.Callback(value)
                 end
 
@@ -388,58 +408,84 @@ function CatLib:MakeGui(GuiConfig)
                 SliderConfig.Max = SliderConfig.Max or 100
                 SliderConfig.Default = SliderConfig.Default or 50
                 SliderConfig.Increment = SliderConfig.Increment or 1
-                SliderConfig.Callback = SliderConfig.Callback or function(value) print(value) end
+                SliderConfig.DecimalPlaces = SliderConfig.DecimalPlaces or 0
+                SliderConfig.Callback = SliderConfig.Callback or function(value) end
+                SliderConfig.Tooltip = SliderConfig.Tooltip or ""
 
                 local SliderFunc = {Value = SliderConfig.Default}
 
                 local Slider = Instance.new("Frame", ItemsContainer)
-                Slider.Size = UDim2.new(1, 0, 0, 60)
+                Slider.Size = UDim2.new(1, 0, 0, 50)
                 Slider.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 Slider.LayoutOrder = ItemCount
 
                 local UICorner = Instance.new("UICorner", Slider)
-                UICorner.CornerRadius = UDim.new(0, 8)
+                UICorner.CornerRadius = UDim.new(0, 6)
 
                 local Title = Instance.new("TextLabel", Slider)
                 Title.Text = SliderConfig.Title
                 Title.Font = Enum.Font.GothamBold
-                Title.TextColor3 = Color3.fromRGB(230, 230, 230)
-                Title.TextSize = 15
+                Title.TextColor3 = GuiConfig.Theme.TextColor
+                Title.TextSize = 14
                 Title.Size = UDim2.new(1, -150, 0, 20)
                 Title.Position = UDim2.new(0, 10, 0, 5)
                 Title.BackgroundTransparency = 1
 
                 local SliderBar = Instance.new("Frame", Slider)
-                SliderBar.Size = UDim2.new(1, -20, 0, 8)
-                SliderBar.Position = UDim2.new(0, 10, 1, -20)
+                SliderBar.Size = UDim2.new(1, -20, 0, 5)
+                SliderBar.Position = UDim2.new(0, 10, 1, -15)
                 SliderBar.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
 
                 local SliderBarCorner = Instance.new("UICorner", SliderBar)
-                SliderBarCorner.CornerRadius = UDim.new(0, 4)
+                SliderBarCorner.CornerRadius = UDim.new(0, 3)
 
                 local Fill = Instance.new("Frame", SliderBar)
                 Fill.Size = UDim2.new((SliderConfig.Default - SliderConfig.Min) / (SliderConfig.Max - SliderConfig.Min), 0, 1, 0)
-                Fill.BackgroundColor3 = GuiConfig.Color
+                Fill.BackgroundColor3 = GuiConfig.Theme.Accent
                 local FillCorner = Instance.new("UICorner", Fill)
-                FillCorner.CornerRadius = UDim.new(0, 4)
+                FillCorner.CornerRadius = UDim.new(0, 3)
 
                 local Circle = Instance.new("Frame", Fill)
-                Circle.Size = UDim2.new(0, 16, 0, 16)
-                Circle.Position = UDim2.new(1, -8, 0.5, -8)
-                Circle.BackgroundColor3 = GuiConfig.Color
+                Circle.Size = UDim2.new(0, 12, 0, 12)
+                Circle.Position = UDim2.new(1, -6, 0.5, -6)
+                Circle.BackgroundColor3 = GuiConfig.Theme.Accent
                 local CircleCorner = Instance.new("UICorner", Circle)
-                CircleCorner.CornerRadius = UDim.new(0, 8)
+                CircleCorner.CornerRadius = UDim.new(0, 6)
 
-                local ValueLabel = Instance.new("TextLabel", Slider)
-                ValueLabel.Text = tostring(SliderConfig.Default)
-                ValueLabel.Font = Enum.Font.Gotham
-                ValueLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-                ValueLabel.TextSize = 13
-                ValueLabel.Size = UDim2.new(0, 60, 0, 20)
-                ValueLabel.Position = UDim2.new(1, -70, 0, 5)
-                ValueLabel.BackgroundTransparency = 1
+                local ValueInput = Instance.new("TextBox", Slider)
+                ValueInput.Size = UDim2.new(0, 50, 0, 20)
+                ValueInput.Position = UDim2.new(1, -60, 0, 5)
+                ValueInput.Text = string.format("%." .. SliderConfig.DecimalPlaces .. "f", SliderConfig.Default)
+                ValueInput.BackgroundTransparency = 1
+                ValueInput.TextColor3 = GuiConfig.Theme.TextColor
+                ValueInput.Font = Enum.Font.Gotham
+                ValueInput.TextSize = 12
+
+                local TooltipLabel = Instance.new("TextLabel", Slider)
+                TooltipLabel.Visible = false
+                TooltipLabel.BackgroundColor3 = GuiConfig.Theme.Secondary
+                TooltipLabel.Text = SliderConfig.Tooltip
+                TooltipLabel.Size = UDim2.new(0, 100, 0, 20)
+                TooltipLabel.Position = UDim2.new(0, 0, 1, 5)
+                TooltipLabel.TextColor3 = GuiConfig.Theme.TextColor
+                TooltipLabel.Font = Enum.Font.Gotham
+                TooltipLabel.TextSize = 12
+
+                Slider.MouseEnter:Connect(function()
+                    TooltipLabel.Visible = true
+                end)
+                Slider.MouseLeave:Connect(function()
+                    TooltipLabel.Visible = false
+                end)
 
                 local Dragging = false
+                local function UpdateSlider(pos)
+                    local rawValue = SliderConfig.Min + (SliderConfig.Max - SliderConfig.Min) * pos
+                    SliderFunc.Value = math.round(rawValue / SliderConfig.Increment) * SliderConfig.Increment
+                    Fill.Size = UDim2.new(pos, 0, 1, 0)
+                    ValueInput.Text = string.format("%." .. SliderConfig.DecimalPlaces .. "f", SliderFunc.Value)
+                end
+
                 SliderBar.InputBegan:Connect(function(input)
                     if input.UserInputType == Enum.UserInputType.MouseButton1 then
                         Dragging = true
@@ -454,75 +500,27 @@ function CatLib:MakeGui(GuiConfig)
                 UserInputService.InputChanged:Connect(function(input)
                     if Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
                         local pos = math.clamp((input.Position.X - SliderBar.AbsolutePosition.X) / SliderBar.AbsoluteSize.X, 0, 1)
-                        SliderFunc.Value = math.floor(SliderConfig.Min + (SliderConfig.Max - SliderConfig.Min) * pos / SliderConfig.Increment) * SliderConfig.Increment
-                        Fill.Size = UDim2.new(pos, 0, 1, 0)
-                        ValueLabel.Text = tostring(SliderFunc.Value)
+                        UpdateSlider(pos)
+                    end
+                end)
+
+                ValueInput.FocusLost:Connect(function()
+                    local newValue = tonumber(ValueInput.Text)
+                    if newValue then
+                        SliderFunc:Set(newValue)
                     end
                 end)
 
                 function SliderFunc:Set(value)
                     SliderFunc.Value = math.clamp(value, SliderConfig.Min, SliderConfig.Max)
-                    Fill.Size = UDim2.new((SliderFunc.Value - SliderConfig.Min) / (SliderConfig.Max - SliderConfig.Min), 0, 1, 0)
-                    ValueLabel.Text = tostring(SliderFunc.Value)
+                    local pos = (SliderFunc.Value - SliderConfig.Min) / (SliderConfig.Max - SliderConfig.Min)
+                    Fill.Size = UDim2.new(pos, 0, 1, 0)
+                    ValueInput.Text = string.format("%." .. SliderConfig.DecimalPlaces .. "f", SliderFunc.Value)
                     SliderConfig.Callback(SliderFunc.Value)
                 end
 
                 ItemCount = ItemCount + 1
                 return SliderFunc
-            end
-
-            function Items:AddInput(InputConfig)
-                InputConfig = InputConfig or {}
-                InputConfig.Title = InputConfig.Title or "Input"
-                InputConfig.Content = InputConfig.Content or "Type here..."
-                InputConfig.Callback = InputConfig.Callback or function(value) print(value) end
-
-                local InputFunc = {Value = ""}
-
-                local Input = Instance.new("Frame", ItemsContainer)
-                Input.Size = UDim2.new(1, 0, 0, 60)
-                Input.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-                Input.LayoutOrder = ItemCount
-
-                local UICorner = Instance.new("UICorner", Input)
-                UICorner.CornerRadius = UDim.new(0, 8)
-
-                local Title = Instance.new("TextLabel", Input)
-                Title.Text = InputConfig.Title
-                Title.Font = Enum.Font.GothamBold
-                Title.TextColor3 = Color3.fromRGB(230, 230, 230)
-                Title.TextSize = 15
-                Title.Size = UDim2.new(1, -150, 0, 20)
-                Title.Position = UDim2.new(0, 10, 0, 5)
-                Title.BackgroundTransparency = 1
-
-                local InputBox = Instance.new("TextBox", Input)
-                InputBox.Size = UDim2.new(0, 140, 0, 25)
-                InputBox.Position = UDim2.new(1, -150, 0.5, -12)
-                InputBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-                InputBox.Text = ""
-                InputBox.PlaceholderText = InputConfig.Content
-                InputBox.Font = Enum.Font.Gotham
-                InputBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-                InputBox.TextSize = 13
-                InputBox.ClearTextOnFocus = false
-
-                local InputCorner = Instance.new("UICorner", InputBox)
-                InputCorner.CornerRadius = UDim.new(0, 6)
-
-                InputBox.FocusLost:Connect(function()
-                    InputFunc.Value = InputBox.Text
-                    InputConfig.Callback(InputFunc.Value)
-                end)
-
-                function InputFunc:Set(value)
-                    InputFunc.Value = value
-                    InputBox.Text = value
-                    InputConfig.Callback(value)
-                end
-
-                ItemCount = ItemCount + 1
-                return InputFunc
             end
 
             function Items:AddDropdown(DropdownConfig)
@@ -532,7 +530,9 @@ function CatLib:MakeGui(GuiConfig)
                 DropdownConfig.Multi = DropdownConfig.Multi or false
                 DropdownConfig.Options = DropdownConfig.Options or {"Option 1", "Option 2", "Option 3"}
                 DropdownConfig.Default = DropdownConfig.Default or (DropdownConfig.Multi and {} or DropdownConfig.Options[1])
-                DropdownConfig.Callback = DropdownConfig.Callback or function(value) print(value) end
+                DropdownConfig.Callback = DropdownConfig.Callback or function(value) end
+                DropdownConfig.Dynamic = DropdownConfig.Dynamic or false
+                DropdownConfig.Tooltip = DropdownConfig.Tooltip or ""
 
                 local DropdownFunc = {Value = DropdownConfig.Default, Options = DropdownConfig.Options}
 
@@ -542,13 +542,13 @@ function CatLib:MakeGui(GuiConfig)
                 Dropdown.LayoutOrder = ItemCount
 
                 local UICorner = Instance.new("UICorner", Dropdown)
-                UICorner.CornerRadius = UDim.new(0, 8)
+                UICorner.CornerRadius = UDim.new(0, 6)
 
                 local Title = Instance.new("TextLabel", Dropdown)
                 Title.Text = DropdownConfig.Title
                 Title.Font = Enum.Font.GothamBold
-                Title.TextColor3 = Color3.fromRGB(230, 230, 230)
-                Title.TextSize = 15
+                Title.TextColor3 = GuiConfig.Theme.TextColor
+                Title.TextSize = 14
                 Title.Size = UDim2.new(1, -150, 0, 20)
                 Title.Position = UDim2.new(0, 10, 0, 5)
                 Title.BackgroundTransparency = 1
@@ -570,15 +570,15 @@ function CatLib:MakeGui(GuiConfig)
                 local SelectedText = Instance.new("TextLabel", Dropdown)
                 SelectedText.Text = DropdownConfig.Multi and table.concat(DropdownConfig.Default, ", ") or DropdownConfig.Default
                 SelectedText.Font = Enum.Font.Gotham
-                SelectedText.TextColor3 = Color3.fromRGB(255, 255, 255)
-                SelectedText.TextSize = 13
+                SelectedText.TextColor3 = GuiConfig.Theme.TextColor
+                SelectedText.TextSize = 12
                 SelectedText.Size = UDim2.new(0, 130, 0, 25)
                 SelectedText.Position = UDim2.new(1, -140, 0.5, -12)
                 SelectedText.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 SelectedText.TextTruncate = Enum.TextTruncate.AtEnd
 
                 local UICornerSelected = Instance.new("UICorner", SelectedText)
-                UICornerSelected.CornerRadius = UDim.new(0, 6)
+                UICornerSelected.CornerRadius = UDim.new(0, 4)
 
                 local DropdownIcon = Instance.new("ImageLabel", Dropdown)
                 DropdownIcon.Image = "rbxassetid://16851841101"
@@ -586,63 +586,79 @@ function CatLib:MakeGui(GuiConfig)
                 DropdownIcon.Position = UDim2.new(1, -25, 0.5, -10)
                 DropdownIcon.BackgroundTransparency = 1
 
+                local TooltipLabel = Instance.new("TextLabel", Dropdown)
+                TooltipLabel.Visible = false
+                TooltipLabel.BackgroundColor3 = GuiConfig.Theme.Secondary
+                TooltipLabel.Text = DropdownConfig.Tooltip
+                TooltipLabel.Size = UDim2.new(0, 100, 0, 20)
+                TooltipLabel.Position = UDim2.new(0, 0, 1, 5)
+                TooltipLabel.TextColor3 = GuiConfig.Theme.TextColor
+                TooltipLabel.Font = Enum.Font.Gotham
+                TooltipLabel.TextSize = 12
+
+                Dropdown.MouseEnter:Connect(function()
+                    TooltipLabel.Visible = true
+                end)
+                Dropdown.MouseLeave:Connect(function()
+                    TooltipLabel.Visible = false
+                end)
+
                 local DropdownMenu = Instance.new("Frame", Main)
                 DropdownMenu.Size = UDim2.new(0, 200, 0, 0)
                 DropdownMenu.Position = UDim2.new(0, Dropdown.AbsolutePosition.X, 0, Dropdown.AbsolutePosition.Y + 60)
-                DropdownMenu.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                DropdownMenu.BackgroundColor3 = GuiConfig.Theme.Secondary
                 DropdownMenu.Visible = false
                 DropdownMenu.ClipsDescendants = true
 
                 local MenuCorner = Instance.new("UICorner", DropdownMenu)
-                MenuCorner.CornerRadius = UDim.new(0, 8)
+                MenuCorner.CornerRadius = UDim.new(0, 6)
 
                 local SearchBox = Instance.new("TextBox", DropdownMenu)
-                SearchBox.Size = UDim2.new(1, -10, 0, 30)
+                SearchBox.Size = UDim2.new(1, -10, 0, 25)
                 SearchBox.Position = UDim2.new(0, 5, 0, 5)
                 SearchBox.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
                 SearchBox.Text = ""
                 SearchBox.PlaceholderText = "Search..."
                 SearchBox.Font = Enum.Font.Gotham
-                SearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
-                SearchBox.TextSize = 13
+                SearchBox.TextColor3 = GuiConfig.Theme.TextColor
+                SearchBox.TextSize = 12
 
                 local SearchCorner = Instance.new("UICorner", SearchBox)
-                SearchCorner.CornerRadius = UDim.new(0, 6)
+                SearchCorner.CornerRadius = UDim.new(0, 4)
 
                 local OptionsScroll = Instance.new("ScrollingFrame", DropdownMenu)
-                OptionsScroll.Size = UDim2.new(1, -10, 1, -70)
-                OptionsScroll.Position = UDim2.new(0, 5, 0, 40)
+                OptionsScroll.Size = UDim2.new(1, -10, 1, -60)
+                OptionsScroll.Position = UDim2.new(0, 5, 0, 35)
                 OptionsScroll.BackgroundTransparency = 1
                 OptionsScroll.ScrollBarThickness = 2
-                OptionsScroll.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 100)
 
                 local OptionsList = Instance.new("UIListLayout", OptionsScroll)
-                OptionsList.Padding = UDim.new(0, 5)
+                OptionsList.Padding = UDim.new(0, 3)
 
                 local SelectAllButton = Instance.new("TextButton", DropdownMenu)
-                SelectAllButton.Size = UDim2.new(0, 90, 0, 25)
-                SelectAllButton.Position = UDim2.new(0, 5, 1, -30)
+                SelectAllButton.Size = UDim2.new(0, 80, 0, 20)
+                SelectAllButton.Position = UDim2.new(0, 5, 1, -25)
                 SelectAllButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 SelectAllButton.Text = "Select All"
                 SelectAllButton.Font = Enum.Font.Gotham
-                SelectAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-                SelectAllButton.TextSize = 13
+                SelectAllButton.TextColor3 = GuiConfig.Theme.TextColor
+                SelectAllButton.TextSize = 12
                 SelectAllButton.Visible = DropdownConfig.Multi
 
                 local ClearAllButton = Instance.new("TextButton", DropdownMenu)
-                ClearAllButton.Size = UDim2.new(0, 90, 0, 25)
-                ClearAllButton.Position = UDim2.new(1, -95, 1, -30)
+                ClearAllButton.Size = UDim2.new(0, 80, 0, 20)
+                ClearAllButton.Position = UDim2.new(1, -85, 1, -25)
                 ClearAllButton.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 ClearAllButton.Text = "Clear All"
                 ClearAllButton.Font = Enum.Font.Gotham
-                ClearAllButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-                ClearAllButton.TextSize = 13
+                ClearAllButton.TextColor3 = GuiConfig.Theme.TextColor
+                ClearAllButton.TextSize = 12
                 ClearAllButton.Visible = DropdownConfig.Multi
 
                 local function UpdateMenuSize()
-                    local height = 70 + #DropdownConfig.Options * 35
-                    if height > 250 then height = 250 end
-                    OptionsScroll.CanvasSize = UDim2.new(0, 0, 0, #DropdownConfig.Options * 35)
+                    local height = 60 + #DropdownConfig.Options * 33
+                    if height > 200 then height = 200 end
+                    OptionsScroll.CanvasSize = UDim2.new(0, 0, 0, #DropdownConfig.Options * 33)
                     return height
                 end
 
@@ -661,13 +677,13 @@ function CatLib:MakeGui(GuiConfig)
                             OptionButton.Parent = OptionsScroll
 
                             local OptionCorner = Instance.new("UICorner", OptionButton)
-                            OptionCorner.CornerRadius = UDim.new(0, 6)
+                            OptionCorner.CornerRadius = UDim.new(0, 4)
 
                             local OptionText = Instance.new("TextLabel", OptionButton)
                             OptionText.Text = option
                             OptionText.Font = Enum.Font.Gotham
-                            OptionText.TextColor3 = Color3.fromRGB(200, 200, 200)
-                            OptionText.TextSize = 13
+                            OptionText.TextColor3 = GuiConfig.Theme.TextColor
+                            OptionText.TextSize = 12
                             OptionText.Size = UDim2.new(1, -30, 1, 0)
                             OptionText.Position = UDim2.new(0, 5, 0, 0)
                             OptionText.BackgroundTransparency = 1
@@ -680,10 +696,10 @@ function CatLib:MakeGui(GuiConfig)
                             Checkmark.Visible = DropdownConfig.Multi and table.find(DropdownFunc.Value, option) or DropdownFunc.Value == option
 
                             OptionButton.MouseEnter:Connect(function()
-                                TweenService:Create(OptionButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)}):Play()
+                                GetTween(OptionButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(60, 60, 60)})
                             end)
                             OptionButton.MouseLeave:Connect(function()
-                                TweenService:Create(OptionButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)}):Play()
+                                GetTween(OptionButton, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(40, 40, 40)})
                             end)
 
                             OptionButton.Activated:Connect(function()
@@ -700,7 +716,7 @@ function CatLib:MakeGui(GuiConfig)
                                     DropdownFunc.Value = option
                                     SelectedText.Text = option
                                     DropdownMenu.Visible = false
-                                    TweenService:Create(DropdownMenu, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {Size = UDim2.new(0, 200, 0, 0)}):Play()
+                                    GetTween(DropdownMenu, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {Size = UDim2.new(0, 200, 0, 0)})
                                 end
                                 DropdownConfig.Callback(DropdownFunc.Value)
                             end)
@@ -733,10 +749,10 @@ function CatLib:MakeGui(GuiConfig)
                     DropdownMenu.Visible = not DropdownMenu.Visible
                     if DropdownMenu.Visible then
                         DropdownMenu.Position = UDim2.new(0, Dropdown.AbsolutePosition.X, 0, Dropdown.AbsolutePosition.Y + 60)
-                        TweenService:Create(DropdownMenu, TweenInfo.new(0.3, Enum.EasingStyle.Elastic), {Size = UDim2.new(0, 200, 0, UpdateMenuSize())}):Play()
+                        GetTween(DropdownMenu, TweenInfo.new(0.3, Enum.EasingStyle.Elastic), {Size = UDim2.new(0, 200, 0, UpdateMenuSize())})
                         RefreshOptions()
                     else
-                        TweenService:Create(DropdownMenu, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {Size = UDim2.new(0, 200, 0, 0)}):Play()
+                        GetTween(DropdownMenu, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {Size = UDim2.new(0, 200, 0, 0)})
                     end
                 end)
 
@@ -751,7 +767,7 @@ function CatLib:MakeGui(GuiConfig)
                     DropdownConfig.Options = options or DropdownConfig.Options
                     DropdownFunc.Value = default or DropdownFunc.Value
                     SelectedText.Text = DropdownConfig.Multi and table.concat(DropdownFunc.Value, ", ") or DropdownFunc.Value
-                    RefreshOptions()
+                    if DropdownConfig.Dynamic then RefreshOptions() end
                 end
 
                 ItemCount = ItemCount + 1
@@ -762,23 +778,25 @@ function CatLib:MakeGui(GuiConfig)
                 ColorConfig = ColorConfig or {}
                 ColorConfig.Title = ColorConfig.Title or "Color Picker"
                 ColorConfig.Default = ColorConfig.Default or Color3.fromRGB(255, 255, 255)
-                ColorConfig.Callback = ColorConfig.Callback or function(color) print(color) end
+                ColorConfig.Callback = ColorConfig.Callback or function(color) end
+                ColorConfig.Presets = ColorConfig.Presets or {Color3.fromRGB(255, 0, 0), Color3.fromRGB(0, 255, 0)}
+                ColorConfig.Tooltip = ColorConfig.Tooltip or ""
 
                 local ColorFunc = {Value = ColorConfig.Default}
 
                 local ColorPicker = Instance.new("Frame", ItemsContainer)
-                ColorPicker.Size = UDim2.new(1, 0, 0, 40)
+                ColorPicker.Size = UDim2.new(1, 0, 0, 35)
                 ColorPicker.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 ColorPicker.LayoutOrder = ItemCount
 
                 local UICorner = Instance.new("UICorner", ColorPicker)
-                UICorner.CornerRadius = UDim.new(0, 8)
+                UICorner.CornerRadius = UDim.new(0, 6)
 
                 local Title = Instance.new("TextLabel", ColorPicker)
                 Title.Text = ColorConfig.Title
                 Title.Font = Enum.Font.GothamBold
-                Title.TextColor3 = Color3.fromRGB(230, 230, 230)
-                Title.TextSize = 15
+                Title.TextColor3 = GuiConfig.Theme.TextColor
+                Title.TextSize = 14
                 Title.Size = UDim2.new(1, -50, 1, 0)
                 Title.Position = UDim2.new(0, 10, 0, 0)
                 Title.BackgroundTransparency = 1
@@ -788,17 +806,34 @@ function CatLib:MakeGui(GuiConfig)
                 ColorPreview.Position = UDim2.new(1, -40, 0.5, -10)
                 ColorPreview.BackgroundColor3 = ColorConfig.Default
                 local PreviewCorner = Instance.new("UICorner", ColorPreview)
-                PreviewCorner.CornerRadius = UDim.new(0, 6)
+                PreviewCorner.CornerRadius = UDim.new(0, 4)
+
+                local TooltipLabel = Instance.new("TextLabel", ColorPicker)
+                TooltipLabel.Visible = false
+                TooltipLabel.BackgroundColor3 = GuiConfig.Theme.Secondary
+                TooltipLabel.Text = ColorConfig.Tooltip
+                TooltipLabel.Size = UDim2.new(0, 100, 0, 20)
+                TooltipLabel.Position = UDim2.new(0, 0, 1, 5)
+                TooltipLabel.TextColor3 = GuiConfig.Theme.TextColor
+                TooltipLabel.Font = Enum.Font.Gotham
+                TooltipLabel.TextSize = 12
+
+                ColorPicker.MouseEnter:Connect(function()
+                    TooltipLabel.Visible = true
+                end)
+                ColorPicker.MouseLeave:Connect(function()
+                    TooltipLabel.Visible = false
+                end)
 
                 local PickerMenu = Instance.new("Frame", Main)
                 PickerMenu.Size = UDim2.new(0, 150, 0, 0)
-                PickerMenu.Position = UDim2.new(0, ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsolutePosition.Y + 40)
-                PickerMenu.BackgroundColor3 = Color3.fromRGB(35, 35, 35)
+                PickerMenu.Position = UDim2.new(0, ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsolutePosition.Y + 35)
+                PickerMenu.BackgroundColor3 = GuiConfig.Theme.Secondary
                 PickerMenu.Visible = false
                 PickerMenu.ClipsDescendants = true
 
                 local PickerCorner = Instance.new("UICorner", PickerMenu)
-                PickerCorner.CornerRadius = UDim.new(0, 8)
+                PickerCorner.CornerRadius = UDim.new(0, 6)
 
                 local SaturationValue = Instance.new("ImageLabel", PickerMenu)
                 SaturationValue.Size = UDim2.new(1, -10, 0, 100)
@@ -813,16 +848,43 @@ function CatLib:MakeGui(GuiConfig)
                 HueBar.BackgroundTransparency = 1
 
                 local SVSelector = Instance.new("Frame", SaturationValue)
-                SVSelector.Size = UDim2.new(0, 8, 0, 8)
+                SVSelector.Size = UDim2.new(0, 6, 0, 6)
                 SVSelector.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 SVSelector.BorderSizePixel = 1
                 SVSelector.BorderColor3 = Color3.fromRGB(0, 0, 0)
 
                 local HueSelector = Instance.new("Frame", HueBar)
-                HueSelector.Size = UDim2.new(0, 8, 0, 8)
+                HueSelector.Size = UDim2.new(0, 6, 0, 6)
                 HueSelector.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
                 HueSelector.BorderSizePixel = 1
                 HueSelector.BorderColor3 = Color3.fromRGB(0, 0, 0)
+
+                local RGBInput = Instance.new("TextBox", PickerMenu)
+                RGBInput.Size = UDim2.new(1, -10, 0, 20)
+                RGBInput.Position = UDim2.new(0, 5, 0, 135)
+                RGBInput.Text = string.format("%d, %d, %d", ColorFunc.Value.R * 255, ColorFunc.Value.G * 255, ColorFunc.Value.B * 255)
+                RGBInput.Font = Enum.Font.Gotham
+                RGBInput.TextColor3 = GuiConfig.Theme.TextColor
+                RGBInput.TextSize = 12
+                RGBInput.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+
+                local PresetContainer = Instance.new("Frame", PickerMenu)
+                PresetContainer.Size = UDim2.new(1, -10, 0, 25)
+                PresetContainer.Position = UDim2.new(0, 5, 0, 160)
+                PresetContainer.BackgroundTransparency = 1
+
+                for i, preset in ipairs(ColorConfig.Presets) do
+                    local PresetButton = Instance.new("TextButton", PresetContainer)
+                    PresetButton.Size = UDim2.new(0, 20, 0, 20)
+                    PresetButton.Position = UDim2.new((i - 1) * 0.2, 0, 0, 0)
+                    PresetButton.BackgroundColor3 = preset
+                    PresetButton.Text = ""
+                    local PresetCorner = Instance.new("UICorner", PresetButton)
+                    PresetCorner.CornerRadius = UDim.new(0, 4)
+                    PresetButton.Activated:Connect(function()
+                        ColorFunc:Set(preset)
+                    end)
+                end
 
                 local function UpdateColor()
                     local huePos = HueSelector.Position.X.Scale
@@ -833,13 +895,14 @@ function CatLib:MakeGui(GuiConfig)
                     local color = Color3.fromHSV(h, s, v)
                     ColorFunc.Value = color
                     ColorPreview.BackgroundColor3 = color
+                    RGBInput.Text = string.format("%d, %d, %d", color.R * 255, color.G * 255, color.B * 255)
                     ColorConfig.Callback(color)
                 end
 
                 local function SetInitialPosition()
                     local h, s, v = ColorConfig.Default:ToHSV()
-                    HueSelector.Position = UDim2.new(h, -4, 0, -4)
-                    SVSelector.Position = UDim2.new(s, -4, 1 - v, -4)
+                    HueSelector.Position = UDim2.new(h, -3, 0, -3)
+                    SVSelector.Position = UDim2.new(s, -3, 1 - v, -3)
                     UpdateColor()
                 end
                 SetInitialPosition()
@@ -871,13 +934,20 @@ function CatLib:MakeGui(GuiConfig)
                         if SVDragging then
                             local pos = math.clamp((input.Position.X - SaturationValue.AbsolutePosition.X) / SaturationValue.AbsoluteSize.X, 0, 1)
                             local posY = math.clamp((input.Position.Y - SaturationValue.AbsolutePosition.Y) / SaturationValue.AbsoluteSize.Y, 0, 1)
-                            SVSelector.Position = UDim2.new(pos, -4, posY, -4)
+                            SVSelector.Position = UDim2.new(pos, -3, posY, -3)
                             UpdateColor()
                         elseif HueDragging then
                             local pos = math.clamp((input.Position.X - HueBar.AbsolutePosition.X) / HueBar.AbsoluteSize.X, 0, 1)
-                            HueSelector.Position = UDim2.new(pos, -4, 0, -4)
+                            HueSelector.Position = UDim2.new(pos, -3, 0, -3)
                             UpdateColor()
                         end
+                    end
+                end)
+
+                RGBInput.FocusLost:Connect(function()
+                    local r, g, b = RGBInput.Text:match("(%d+), (%d+), (%d+)")
+                    if r and g and b then
+                        ColorFunc:Set(Color3.fromRGB(tonumber(r), tonumber(g), tonumber(b)))
                     end
                 end)
 
@@ -890,10 +960,10 @@ function CatLib:MakeGui(GuiConfig)
                     CircleClick(ColorPickerButton, Mouse.X, Mouse.Y)
                     PickerMenu.Visible = not PickerMenu.Visible
                     if PickerMenu.Visible then
-                        PickerMenu.Position = UDim2.new(0, ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsolutePosition.Y + 40)
-                        TweenService:Create(PickerMenu, TweenInfo.new(0.3, Enum.EasingStyle.Elastic), {Size = UDim2.new(0, 150, 0, 130)}):Play()
+                        PickerMenu.Position = UDim2.new(0, ColorPicker.AbsolutePosition.X, 0, ColorPicker.AbsolutePosition.Y + 35)
+                        GetTween(PickerMenu, TweenInfo.new(0.3, Enum.EasingStyle.Elastic), {Size = UDim2.new(0, 150, 0, 190)})
                     else
-                        TweenService:Create(PickerMenu, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {Size = UDim2.new(0, 150, 0, 0)}):Play()
+                        GetTween(PickerMenu, TweenInfo.new(0.3, Enum.EasingStyle.Sine), {Size = UDim2.new(0, 150, 0, 0)})
                     end
                 end)
 
@@ -912,23 +982,24 @@ function CatLib:MakeGui(GuiConfig)
                 KeybindConfig = KeybindConfig or {}
                 KeybindConfig.Title = KeybindConfig.Title or "Keybind"
                 KeybindConfig.Default = KeybindConfig.Default or Enum.KeyCode.E
-                KeybindConfig.Callback = KeybindConfig.Callback or function() print("Key pressed") end
+                KeybindConfig.Callback = KeybindConfig.Callback or function() end
+                KeybindConfig.Tooltip = KeybindConfig.Tooltip or ""
 
-                local KeybindFunc = {Value = KeybindConfig.Default}
+                local KeybindFunc = {Value = KeybindConfig.Default, Modifiers = {}}
 
                 local Keybind = Instance.new("Frame", ItemsContainer)
-                Keybind.Size = UDim2.new(1, 0, 0, 40)
+                Keybind.Size = UDim2.new(1, 0, 0, 35)
                 Keybind.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
                 Keybind.LayoutOrder = ItemCount
 
                 local UICorner = Instance.new("UICorner", Keybind)
-                UICorner.CornerRadius = UDim.new(0, 8)
+                UICorner.CornerRadius = UDim.new(0, 6)
 
                 local Title = Instance.new("TextLabel", Keybind)
                 Title.Text = KeybindConfig.Title
                 Title.Font = Enum.Font.GothamBold
-                Title.TextColor3 = Color3.fromRGB(230, 230, 230)
-                Title.TextSize = 15
+                Title.TextColor3 = GuiConfig.Theme.TextColor
+                Title.TextSize = 14
                 Title.Size = UDim2.new(1, -100, 1, 0)
                 Title.Position = UDim2.new(0, 10, 0, 0)
                 Title.BackgroundTransparency = 1
@@ -939,33 +1010,74 @@ function CatLib:MakeGui(GuiConfig)
                 KeyText.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
                 KeyText.Text = KeybindConfig.Default.Name
                 KeyText.Font = Enum.Font.Gotham
-                KeyText.TextColor3 = Color3.fromRGB(255, 255, 255)
-                KeyText.TextSize = 13
+                KeyText.TextColor3 = GuiConfig.Theme.TextColor
+                KeyText.TextSize = 12
 
                 local KeyCorner = Instance.new("UICorner", KeyText)
-                KeyCorner.CornerRadius = UDim.new(0, 6)
+                KeyCorner.CornerRadius = UDim.new(0, 4)
+
+                local TooltipLabel = Instance.new("TextLabel", Keybind)
+                TooltipLabel.Visible = false
+                TooltipLabel.BackgroundColor3 = GuiConfig.Theme.Secondary
+                TooltipLabel.Text = KeybindConfig.Tooltip
+                TooltipLabel.Size = UDim2.new(0, 100, 0, 20)
+                TooltipLabel.Position = UDim2.new(0, 0, 1, 5)
+                TooltipLabel.TextColor3 = GuiConfig.Theme.TextColor
+                TooltipLabel.Font = Enum.Font.Gotham
+                TooltipLabel.TextSize = 12
+
+                Keybind.MouseEnter:Connect(function()
+                    TooltipLabel.Visible = true
+                end)
+                Keybind.MouseLeave:Connect(function()
+                    TooltipLabel.Visible = false
+                end)
 
                 local WaitingForBind = false
+                local WaitingForModifiers = false
                 KeyText.Activated:Connect(function()
                     CircleClick(KeyText, Mouse.X, Mouse.Y)
                     WaitingForBind = true
-                    KeyText.Text = "..."
+                    WaitingForModifiers = true
+                    KeyText.Text = "Press a key (Modifiers: Ctrl, Shift, Alt)..."
                 end)
 
                 UserInputService.InputBegan:Connect(function(input)
                     if WaitingForBind and input.UserInputType == Enum.UserInputType.Keyboard then
-                        KeybindFunc.Value = input.KeyCode
-                        KeyText.Text = input.KeyCode.Name
-                        WaitingForBind = false
-                        KeybindConfig.Callback()
+                        if WaitingForModifiers then
+                            if input.KeyCode == Enum.KeyCode.LeftControl or input.KeyCode == Enum.KeyCode.RightControl then
+                                table.insert(KeybindFunc.Modifiers, "Ctrl")
+                            elseif input.KeyCode == Enum.KeyCode.LeftShift or input.KeyCode == Enum.KeyCode.RightShift then
+                                table.insert(KeybindFunc.Modifiers, "Shift")
+                            elseif input.KeyCode == Enum.KeyCode.LeftAlt or input.KeyCode == Enum.KeyCode.RightAlt then
+                                table.insert(KeybindFunc.Modifiers, "Alt")
+                            else
+                                KeybindFunc.Value = input.KeyCode
+                                KeyText.Text = table.concat(KeybindFunc.Modifiers, "+") .. "+" .. input.KeyCode.Name
+                                WaitingForBind = false
+                                WaitingForModifiers = false
+                                KeybindConfig.Callback()
+                            end
+                        end
                     elseif input.KeyCode == KeybindFunc.Value and not WaitingForBind then
-                        KeybindConfig.Callback()
+                        local allModifiersPressed = true
+                        for _, mod in pairs(KeybindFunc.Modifiers) do
+                            if mod == "Ctrl" and not (UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) or UserInputService:IsKeyDown(Enum.KeyCode.RightControl)) then
+                                allModifiersPressed = false
+                            elseif mod == "Shift" and not (UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)) then
+                                allModifiersPressed = false
+                            elseif mod == "Alt" and not (UserInputService:IsKeyDown(Enum.KeyCode.LeftAlt) or UserInputService:IsKeyDown(Enum.KeyCode.RightAlt)) then
+                                allModifiersPressed = false
+                            end
+                        end
+                        if allModifiersPressed then KeybindConfig.Callback() end
                     end
                 end)
 
-                function KeybindFunc:Set(key)
+                function KeybindFunc:Set(key, modifiers)
                     KeybindFunc.Value = key
-                    KeyText.Text = key.Name
+                    KeybindFunc.Modifiers = modifiers or {}
+                    KeyText.Text = table.concat(KeybindFunc.Modifiers, "+") .. "+" .. key.Name
                     KeybindConfig.Callback()
                 end
 
@@ -985,15 +1097,13 @@ function CatLib:MakeGui(GuiConfig)
         HirimiGui:Destroy()
     end
 
-    function GuiFunc:ToggleUI()
-        HirimiGui.Enabled = not HirimiGui.Enabled
+    function GuiFunc:SetTheme(newTheme)
+        GuiConfig.Theme = newTheme
+        Main.BackgroundColor3 = newTheme.Background
+        Top.BackgroundColor3 = newTheme.Secondary
+        Title.TextColor3 = newTheme.TextColor
+        -- Cập nhật thêm các thành phần khác nếu cần
     end
-
-    UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == Enum.KeyCode.RightShift then
-            GuiFunc:ToggleUI()
-        end
-    end)
 
     return Tabs, GuiFunc
 end
