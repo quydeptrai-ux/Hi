@@ -1,559 +1,718 @@
-Tôi hiểu rằng bạn muốn tôi nâng cấp toàn bộ mã nguồn của thư viện UI "WazureV1" này. Vì bạn yêu cầu bằng tiếng Việt ("nâng cấp full gửi tôi"), tôi sẽ cải tiến mã nguồn này với các tính năng mới, tối ưu hóa hiệu suất, thêm xử lý lỗi, và hoàn thiện các chức năng còn thiếu (như lưu trữ dữ liệu). Dưới đây là phiên bản nâng cấp đầy đủ của mã nguồn, kèm theo giải thích chi tiết về những thay đổi.Những Nâng Cấp ChínhHoàn thiện chức năng lưu trữ:Thay thế các hàm getgenv().readdata, getgenv().save, getgenv().loadsetting bằng hệ thống sử dụng DataStore của Roblox để lưu và tải cấu hình.Tối ưu hóa hiệu suất:Giảm thiểu việc tạo các đối tượng UI không cần thiết và sử dụng bộ nhớ đệm.Thêm xử lý lỗi:Sử dụng pcall để bắt lỗi và thông báo cho người dùng khi có sự cố.Thêm tính năng mới:Hỗ trợ giao diện tối/ sáng (dark/light theme).Thêm nút "Reset Config" để khôi phục cài đặt mặc định.Hỗ trợ phím tắt để mở/ đóng UI.Cải thiện giao diện:Thêm hiệu ứng hover đẹp hơn và tối ưu hóa các animation.Dưới đây là mã nguồn đã nâng cấp:-- WazureV1 UI Library (Upgraded Version)
--- Current Date: March 11, 2025
--- Upgraded by Grok 3 (xAI)
-
-local DataStoreService = game:GetService("DataStoreService")
-local HttpService = game:GetService("HttpService")
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
-local Players = game:GetService("Players")
-local LocalPlayer = Players.LocalPlayer
+local RunService = game:GetService("RunService")
+local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local CoreGui = game:GetService("CoreGui")
 
--- DataStore để lưu cấu hình
-local ConfigStore = DataStoreService:GetDataStore("WazureV1_Config")
+-- Global Functions (Mocked for now, replace with actual implementation if needed)
+getgenv().readdata = getgenv().readdata or function(foldername, filename, tabs) return {} end
+getgenv().save = getgenv().save or function(foldername, filename, filecontent) end
+getgenv().loadsetting = getgenv().loadsetting or function(foldername, filename, tabs) return {} end
 
--- Hàm lưu trữ và tải dữ liệu
-local function saveData(foldername, filename, data)
-    local success, err = pcall(function()
-        local key = foldername .. "_" .. filename
-        ConfigStore:SetAsync(key, HttpService:JSONEncode(data))
-    end)
-    if not success then
-        warn("Failed to save config: " .. err)
-    end
-end
-
-local function loadData(foldername, filename)
-    local success, data = pcall(function()
-        local key = foldername .. "_" .. filename
-        return HttpService:JSONDecode(ConfigStore:GetAsync(key) or "{}")
-    end)
-    if success then
-        return data
-    else
-        warn("Failed to load config: " .. data)
-        return {}
-    end
-end
-
--- Hàm làm giao diện có thể kéo và thay đổi kích thước
+-- Utility Functions
 local function MakeDraggable(topbarobject, object)
-    local function CustomPos(topbarobject, object)
-        local Dragging, DragInput, DragStart, StartPosition
-        local function UpdatePos(input)
-            local Delta = input.Position - DragStart
-            local pos = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
-            TweenService:Create(object, TweenInfo.new(0.2), {Position = pos}):Play()
-        end
-
-        topbarobject.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                Dragging = true
-                DragStart = input.Position
-                StartPosition = object.Position
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then Dragging = false end
-                end)
-            end
-        end)
-
-        topbarobject.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                DragInput = input
-            end
-        end)
-
-        UserInputService.InputChanged:Connect(function(input)
-            if input == DragInput and Dragging then UpdatePos(input) end
-        end)
+    local Dragging, DragInput, DragStart, StartPosition
+    local function UpdatePos(input)
+        local Delta = input.Position - DragStart
+        local pos = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
+        TweenService:Create(object, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {Position = pos}):Play()
     end
 
-    local function CustomSize(object)
-        local Dragging, DragInput, DragStart, StartSize
-        local maxSizeX, maxSizeY = object.Size.X.Offset, object.Size.Y.Offset
-        local changesizeobject = Instance.new("Frame")
-        changesizeobject.AnchorPoint = Vector2.new(1, 1)
-        changesizeobject.BackgroundTransparency = 0.99
-        changesizeobject.Position = UDim2.new(1, 20, 1, 20)
-        changesizeobject.Size = UDim2.new(0, 40, 0, 40)
-        changesizeobject.Parent = object
-
-        local function UpdateSize(input)
-            local Delta = input.Position - DragStart
-            local newWidth = math.max(StartSize.X.Offset + Delta.X, maxSizeX)
-            local newHeight = math.max(StartSize.Y.Offset + Delta.Y, maxSizeY)
-            TweenService:Create(object, TweenInfo.new(0.2), {Size = UDim2.new(0, newWidth, 0, newHeight)}):Play()
+    topbarobject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            Dragging = true
+            DragStart = input.Position
+            StartPosition = object.Position
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then Dragging = false end
+            end)
         end
+    end)
 
-        changesizeobject.InputBegan:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-                Dragging = true
-                DragStart = input.Position
-                StartSize = object.Size
-                input.Changed:Connect(function()
-                    if input.UserInputState == Enum.UserInputState.End then Dragging = false end
-                end)
-            end
-        end)
+    topbarobject.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+            DragInput = input
+        end
+    end)
 
-        changesizeobject.InputChanged:Connect(function(input)
-            if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-                DragInput = input
-            end
-        end)
-
-        UserInputService.InputChanged:Connect(function(input)
-            if input == DragInput and Dragging then UpdateSize(input) end
-        end)
-    end
-    CustomSize(object)
-    CustomPos(topbarobject, object)
+    UserInputService.InputChanged:Connect(function(input)
+        if input == DragInput and Dragging then UpdatePos(input) end
+    end)
 end
 
-local WazureV1 = {}
+local function MakeResizable(object)
+    local ResizeHandle = Instance.new("Frame")
+    ResizeHandle.Size = UDim2.new(0, 20, 0, 20)
+    ResizeHandle.Position = UDim2.new(1, -10, 1, -10)
+    ResizeHandle.BackgroundTransparency = 1
+    ResizeHandle.Parent = object
 
--- Hệ thống thông báo
-function WazureV1:Notify(NotifyConfig)
+    local Dragging, DragInput, DragStart, StartSize
+    local MinSize = Vector2.new(300, 200)
+
+    local function UpdateSize(input)
+        local Delta = input.Position - DragStart
+        local NewSize = Vector2.new(math.max(StartSize.X + Delta.X, MinSize.X), math.max(StartSize.Y + Delta.Y, MinSize.Y))
+        TweenService:Create(object, TweenInfo.new(0.15, Enum.EasingStyle.Quad), {Size = UDim2.new(0, NewSize.X, 0, NewSize.Y)}):Play()
+    end
+
+    ResizeHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            Dragging = true
+            DragStart = input.Position
+            StartSize = Vector2.new(object.Size.X.Offset, object.Size.Y.Offset)
+            input.Changed:Connect(function()
+                if input.UserInputState == Enum.UserInputState.End then Dragging = false end
+            end)
+        end
+    end)
+
+    ResizeHandle.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then DragInput = input end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == DragInput and Dragging then UpdateSize(input) end
+    end)
+end
+
+local function AddTooltip(element, text)
+    local Tooltip = Instance.new("TextLabel")
+    Tooltip.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    Tooltip.TextColor3 = Color3.fromRGB(255, 255, 255)
+    Tooltip.Text = text
+    Tooltip.TextSize = 12
+    Tooltip.Size = UDim2.new(0, 100, 0, 20)
+    Tooltip.Visible = false
+    Tooltip.Parent = CoreGui
+
+    element.MouseEnter:Connect(function()
+        Tooltip.Position = UDim2.new(0, Mouse.X + 10, 0, Mouse.Y + 10)
+        Tooltip.Visible = true
+    end)
+
+    element.MouseLeave:Connect(function()
+        Tooltip.Visible = false
+    end)
+end
+
+-- WazureV3.1 Library
+local WazureV3 = {Themes = {
+    Dark = {Primary = Color3.fromRGB(25, 25, 25), Secondary = Color3.fromRGB(35, 35, 35), Accent = Color3.fromRGB(6, 141, 234), Text = Color3.fromRGB(255, 255, 255)},
+    Light = {Primary = Color3.fromRGB(240, 240, 240), Secondary = Color3.fromRGB(220, 220, 220), Accent = Color3.fromRGB(0, 120, 200), Text = Color3.fromRGB(0, 0, 0)}
+}}
+
+function WazureV3:Notify(NotifyConfig)
     local NotifyConfig = NotifyConfig or {}
-    NotifyConfig.Title = NotifyConfig.Title or "Alert"
-    NotifyConfig.Content = NotifyConfig.Content or "Content"
+    NotifyConfig.Title = NotifyConfig.Title or "Notification"
+    NotifyConfig.Content = NotifyConfig.Content or "This is a notification."
     NotifyConfig.Logo = NotifyConfig.Logo or "rbxassetid://18289959127"
     NotifyConfig.Time = NotifyConfig.Time or 0.5
     NotifyConfig.Delay = NotifyConfig.Delay or 5
-    local NotifyFunc = {}
 
-    spawn(function()
-        local NotifyGui = CoreGui:FindFirstChild("NotifyGui") or Instance.new("ScreenGui", CoreGui)
-        NotifyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-        NotifyGui.Name = "NotifyGui"
+    local NotifyGui = CoreGui:FindFirstChild("NotifyGui") or Instance.new("ScreenGui", CoreGui)
+    NotifyGui.Name = "NotifyGui"
+    NotifyGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 
-        local NotifyLayout = NotifyGui:FindFirstChild("NotifyLayout") or Instance.new("Frame", NotifyGui)
-        NotifyLayout.AnchorPoint = Vector2.new(1, 0)
-        NotifyLayout.BackgroundTransparency = 1
-        NotifyLayout.Position = UDim2.new(1, -10, 0, 10)
-        NotifyLayout.Size = UDim2.new(0, 260, 1, -20)
-        NotifyLayout.Name = "NotifyLayout"
+    local NotifyLayout = NotifyGui:FindFirstChild("NotifyLayout") or Instance.new("Frame", NotifyGui)
+    NotifyLayout.Name = "NotifyLayout"
+    NotifyLayout.AnchorPoint = Vector2.new(1, 0)
+    NotifyLayout.Position = UDim2.new(1, -10, 0, 10)
+    NotifyLayout.Size = UDim2.new(0, 260, 1, -20)
+    NotifyLayout.BackgroundTransparency = 1
 
-        local Count = 0
-        NotifyLayout.ChildRemoved:Connect(function()
-            Count = 0
-            for i, v in NotifyLayout:GetChildren() do
-                TweenService:Create(v, TweenInfo.new(0.3, Enum.EasingStyle.Quad), {Position = UDim2.new(0, 0, 0, (v.Size.Y.Offset + 12) * Count)}):Play()
-                Count = Count + 1
-            end
-        end)
+    local NotifyFrame = Instance.new("Frame")
+    NotifyFrame.Size = UDim2.new(1, 0, 0, 70)
+    NotifyFrame.BackgroundTransparency = 1
+    NotifyFrame.Parent = NotifyLayout
 
-        local NotifyFrame = Instance.new("Frame", NotifyLayout)
-        NotifyFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        NotifyFrame.BackgroundTransparency = 0.1
-        NotifyFrame.Size = UDim2.new(1, 0, 0, 70)
-        NotifyFrame.Position = UDim2.new(0, 0, 0, 0)
+    local NotifyFrameReal = Instance.new("Frame")
+    NotifyFrameReal.BackgroundColor3 = WazureV3.CurrentTheme.Primary
+    NotifyFrameReal.Size = UDim2.new(1, 0, 1, 0)
+    NotifyFrameReal.Position = UDim2.new(0, 270, 0, 0)
+    NotifyFrameReal.Parent = NotifyFrame
+    Instance.new("UICorner", NotifyFrameReal).CornerRadius = UDim.new(0, 5)
 
-        local NotifyFrameReal = Instance.new("Frame", NotifyFrame)
-        NotifyFrameReal.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        NotifyFrameReal.Position = UDim2.new(0, 270, 0, 0)
-        NotifyFrameReal.Size = UDim2.new(1, 0, 1, 0)
-        Instance.new("UICorner", NotifyFrameReal).CornerRadius = UDim.new(0, 5)
+    local NotifyLogo = Instance.new("ImageLabel")
+    NotifyLogo.Image = NotifyConfig.Logo
+    NotifyLogo.Size = UDim2.new(0, 45, 0, 45)
+    NotifyLogo.Position = UDim2.new(0, 12, 0.5, 0)
+    NotifyLogo.AnchorPoint = Vector2.new(0, 0.5)
+    NotifyLogo.BackgroundTransparency = 1
+    NotifyLogo.Parent = NotifyFrameReal
+    Instance.new("UICorner", NotifyLogo).CornerRadius = UDim.new(0, 5)
 
-        local DropShadowHolder = Instance.new("Frame", NotifyFrameReal)
-        DropShadowHolder.BackgroundTransparency = 1
-        DropShadowHolder.Size = UDim2.new(1, 0, 1, 0)
-        DropShadowHolder.ZIndex = 0
-        local DropShadow = Instance.new("ImageLabel", DropShadowHolder)
-        DropShadow.Image = "rbxassetid://6015897843"
-        DropShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-        DropShadow.ImageTransparency = 0.5
-        DropShadow.ScaleType = Enum.ScaleType.Slice
-        DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
-        DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
-        DropShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-        DropShadow.Size = UDim2.new(1, 47, 1, 47)
-        DropShadow.ZIndex = 0
+    local NotifyTitle = Instance.new("TextLabel")
+    NotifyTitle.Text = NotifyConfig.Title
+    NotifyTitle.Font = Enum.Font.GothamBold
+    NotifyTitle.TextColor3 = WazureV3.CurrentTheme.Text
+    NotifyTitle.TextSize = 14
+    NotifyTitle.Position = UDim2.new(0, 69, 0, 15)
+    NotifyTitle.Size = UDim2.new(1, -140, 0, 14)
+    NotifyTitle.BackgroundTransparency = 1
+    NotifyTitle.Parent = NotifyFrameReal
 
-        local NotifyLogo = Instance.new("ImageLabel", NotifyFrameReal)
-        NotifyLogo.Image = NotifyConfig.Logo
-        NotifyLogo.AnchorPoint = Vector2.new(0, 0.5)
-        NotifyLogo.Position = UDim2.new(0, 12, 0.5, 0)
-        NotifyLogo.Size = UDim2.new(0, 45, 0, 45)
-        Instance.new("UICorner", NotifyLogo).CornerRadius = UDim.new(0, 5)
+    local NotifyContent = Instance.new("TextLabel")
+    NotifyContent.Text = NotifyConfig.Content
+    NotifyContent.Font = Enum.Font.Gotham
+    NotifyContent.TextColor3 = WazureV3.CurrentTheme.Text
+    NotifyContent.TextTransparency = 0.3
+    NotifyContent.TextSize = 12
+    NotifyContent.Position = UDim2.new(0, 69, 0, 29)
+    NotifyContent.Size = UDim2.new(1, -140, 0, 24)
+    NotifyContent.TextWrapped = true
+    NotifyContent.BackgroundTransparency = 1
+    NotifyContent.Parent = NotifyFrameReal
 
-        local NotifyTitle = Instance.new("TextLabel", NotifyFrameReal)
-        NotifyTitle.Font = Enum.Font.GothamBold
-        NotifyTitle.Text = NotifyConfig.Title
-        NotifyTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-        NotifyTitle.TextSize = 12
-        NotifyTitle.TextXAlignment = Enum.TextXAlignment.Left
-        NotifyTitle.Position = UDim2.new(0, 69, 0, 15)
-        NotifyTitle.Size = UDim2.new(1, -140, 0, 14)
+    NotifyContent.Size = UDim2.new(1, -140, 0, NotifyContent.TextBounds.Y + 10)
+    NotifyFrame.Size = UDim2.new(1, 0, 0, math.max(70, NotifyContent.TextBounds.Y + 40))
 
-        local NotifyContent = Instance.new("TextLabel", NotifyFrameReal)
-        NotifyContent.Font = Enum.Font.Gotham
-        NotifyContent.Text = NotifyConfig.Content
-        NotifyContent.TextColor3 = Color3.fromRGB(80, 80, 80)
-        NotifyContent.TextSize = 12
-        NotifyContent.TextTransparency = 0.3
-        NotifyContent.TextXAlignment = Enum.TextXAlignment.Left
-        NotifyContent.TextYAlignment = Enum.TextYAlignment.Top
-        NotifyContent.Position = UDim2.new(0, 69, 0, 29)
-        NotifyContent.Size = UDim2.new(1, -140, 0, 24)
-        NotifyContent.TextWrapped = true
+    local function Close()
+        TweenService:Create(NotifyFrameReal, TweenInfo.new(NotifyConfig.Time), {Position = UDim2.new(0, 270, 0, 0)}):Play()
+        task.delay(NotifyConfig.Time, function() NotifyFrame:Destroy() end)
+    end
 
-        NotifyContent.Size = UDim2.new(1, -140, 0, 12 + (12 * (NotifyContent.TextBounds.X // NotifyContent.AbsoluteSize.X)))
-        if NotifyContent.AbsoluteSize.Y < 25 then
-            NotifyFrame.Size = UDim2.new(1, 0, 0, 70)
-        else
-            NotifyFrame.Size = UDim2.new(1, 0, 0, NotifyContent.AbsoluteSize.Y + 17)
-        end
+    TweenService:Create(NotifyFrameReal, TweenInfo.new(NotifyConfig.Time), {Position = UDim2.new(0, 0, 0, 0)}):Play()
+    task.delay(NotifyConfig.Delay, Close)
 
-        local waitclose = false
-        function NotifyFunc:Close()
-            if waitclose then return false end
-            waitclose = true
-            TweenService:Create(NotifyFrameReal, TweenInfo.new(NotifyConfig.Time), {Position = UDim2.new(0, 270, 0, 0)}):Play()
-            task.wait(NotifyConfig.Time / 1.2)
-            NotifyFrame:Destroy()
-        end
-
-        TweenService:Create(NotifyFrameReal, TweenInfo.new(NotifyConfig.Time), {Position = UDim2.new(0, 0, 0, 0)}):Play()
-        task.wait(NotifyConfig.Delay)
-        NotifyFunc:Close()
-    end)
-    return NotifyFunc
+    return {Close = Close}
 end
 
--- Khởi tạo UI chính
-function WazureV1:Start(GuiConfig)
+function WazureV3:Start(GuiConfig)
     local GuiConfig = GuiConfig or {}
-    GuiConfig.Name = GuiConfig.Name or "WazureV1"
-    GuiConfig["Logo Player"] = GuiConfig["Logo Player"] or "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LocalPlayer.UserId .. "&width=420&height=420&format=png"
-    GuiConfig["Name Player"] = GuiConfig["Name Player"] or LocalPlayer.Name
-    GuiConfig["Tab Width"] = GuiConfig["Tab Width"] or 120
-    GuiConfig["Color"] = GuiConfig["Color"] or Color3.fromRGB(6, 141, 234)
-    GuiConfig["Save Config"] = GuiConfig["Save Config"] or {Folder = "WazureV1", ["Name Config"] = "Default"}
-    GuiConfig["Theme"] = GuiConfig["Theme"] or "Dark" -- Thêm tùy chọn theme
-    GuiConfig["ToggleKey"] = GuiConfig["ToggleKey"] or Enum.KeyCode.F4 -- Phím tắt
-    GuiConfig["CloseCallBack"] = GuiConfig["CloseCallBack"] or function() end
+    GuiConfig.Name = GuiConfig.Name or "WazureV3.1"
+    GuiConfig.LogoPlayer = GuiConfig.LogoPlayer or "rbxassetid://18243105495"
+    GuiConfig.NamePlayer = GuiConfig.NamePlayer or LocalPlayer.Name
+    GuiConfig.TabWidth = GuiConfig.TabWidth or 120
+    GuiConfig.Color = GuiConfig.Color or Color3.fromRGB(6, 141, 234)
+    GuiConfig.SaveConfig = GuiConfig.SaveConfig or {Folder = GuiConfig.Name, NameConfig = "Config"}
+    GuiConfig.Theme = GuiConfig.Theme or "Dark"
+    WazureV3.CurrentTheme = WazureV3.Themes[GuiConfig.Theme] or WazureV3.Themes.Dark
 
-    local GuiFunc = {}
     local AzuGui = Instance.new("ScreenGui", CoreGui)
+    AzuGui.Name = "WazureV3Gui"
     AzuGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
-    AzuGui.Name = "AzuGui"
 
     local Main = Instance.new("Frame", AzuGui)
-    Main.BackgroundColor3 = GuiConfig["Theme"] == "Light" and Color3.fromRGB(240, 240, 240) or Color3.fromRGB(15, 16, 17)
-    Main.Position = UDim2.new(0, 447, 0, 203)
     Main.Size = UDim2.new(0, 550, 0, 400)
-    Main.Position = UDim2.new(0, (AzuGui.AbsoluteSize.X // 2 - Main.Size.X.Offset // 2), 0, (AzuGui.AbsoluteSize.Y // 2 - Main.Size.Y.Offset // 2))
-    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 4)
-
-    local DropShadowHolder = Instance.new("Frame", Main)
-    DropShadowHolder.BackgroundTransparency = 1
-    DropShadowHolder.Size = UDim2.new(1, 0, 1, 0)
-    DropShadowHolder.ZIndex = 0
-    local DropShadow = Instance.new("ImageLabel", DropShadowHolder)
-    DropShadow.Image = "rbxassetid://6015897843"
-    DropShadow.ImageColor3 = Color3.fromRGB(0, 0, 0)
-    DropShadow.ImageTransparency = 0.5
-    DropShadow.ScaleType = Enum.ScaleType.Slice
-    DropShadow.SliceCenter = Rect.new(49, 49, 450, 450)
-    DropShadow.AnchorPoint = Vector2.new(0.5, 0.5)
-    DropShadow.Position = UDim2.new(0.5, 0, 0.5, 0)
-    DropShadow.Size = UDim2.new(1, 47, 1, 47)
+    Main.Position = UDim2.new(0.5, -275, 0.5, -200)
+    Main.BackgroundColor3 = WazureV3.CurrentTheme.Primary
+    Instance.new("UICorner", Main).CornerRadius = UDim.new(0, 6)
 
     local Top = Instance.new("Frame", Main)
-    Top.BackgroundColor3 = GuiConfig["Theme"] == "Light" and Color3.fromRGB(255, 255, 255) or Color3.fromRGB(25, 26, 27)
-    Top.Size = UDim2.new(1, 0, 0, 35)
-    Instance.new("UICorner", Top).CornerRadius = UDim.new(0, 3)
+    Top.Size = UDim2.new(1, 0, 0, 40)
+    Top.BackgroundColor3 = WazureV3.CurrentTheme.Secondary
+    Instance.new("UICorner", Top).CornerRadius = UDim.new(0, 6)
 
     local NameHub = Instance.new("TextLabel", Top)
-    NameHub.Font = Enum.Font.Highway
     NameHub.Text = GuiConfig.Name
-    NameHub.TextColor3 = GuiConfig["Theme"] == "Light" and Color3.fromRGB(0, 0, 0) or Color3.fromRGB(202, 251, 255)
-    NameHub.TextSize = 24
-    NameHub.TextXAlignment = Enum.TextXAlignment.Left
-    NameHub.Position = UDim2.new(0, 7, 0, 0)
+    NameHub.Font = Enum.Font.GothamBold
+    NameHub.TextColor3 = WazureV3.CurrentTheme.Text
+    NameHub.TextSize = 18
     NameHub.Size = UDim2.new(1, -80, 1, 0)
+    NameHub.Position = UDim2.new(0, 10, 0, 0)
+    NameHub.BackgroundTransparency = 1
 
     local CloseButton = Instance.new("TextButton", Top)
-    CloseButton.AnchorPoint = Vector2.new(1, 0)
+    CloseButton.Size = UDim2.new(0, 30, 0, 30)
+    CloseButton.Position = UDim2.new(1, -35, 0, 5)
     CloseButton.BackgroundTransparency = 1
-    CloseButton.Position = UDim2.new(1, -1, 0, 0)
-    CloseButton.Size = UDim2.new(0, 35, 0, 35)
     local CloseImage = Instance.new("ImageLabel", CloseButton)
+    CloseImage.Size = UDim2.new(1, 0, 1, 0)
     CloseImage.Image = "rbxassetid://18328658828"
-    CloseImage.ImageColor3 = Color3.fromRGB(150, 150, 150)
-    CloseImage.AnchorPoint = Vector2.new(0.5, 0.5)
-    CloseImage.Position = UDim2.new(0.5, 0, 0.5, 0)
-    CloseImage.Size = UDim2.new(1, -18, 1, -18)
-
-    local HideButton = Instance.new("TextButton", Top)
-    HideButton.AnchorPoint = Vector2.new(1, 0)
-    HideButton.BackgroundTransparency = 1
-    HideButton.Position = UDim2.new(1, -35, 0, 0)
-    HideButton.Size = UDim2.new(0, 35, 0, 35)
-    local HideImage = Instance.new("ImageLabel", HideButton)
-    HideImage.Image = "rbxassetid://18328656799"
-    HideImage.ImageColor3 = Color3.fromRGB(150, 150, 150)
-    HideImage.AnchorPoint = Vector2.new(0.5, 0.5)
-    HideImage.Position = UDim2.new(0.5, 0, 0.5, 0)
-    HideImage.Size = UDim2.new(1, -18, 1, -18)
+    CloseImage.BackgroundTransparency = 1
 
     MakeDraggable(Top, Main)
+    MakeResizable(Main)
 
-    function GuiFunc:CloseUI()
-        AzuGui:Destroy()
-    end
+    local Tabs = Instance.new("Frame", Main)
+    Tabs.Size = UDim2.new(0, GuiConfig.TabWidth, 1, -50)
+    Tabs.Position = UDim2.new(0, 5, 0, 45)
+    Tabs.BackgroundTransparency = 1
 
-    function GuiFunc:ToggleUI()
-        Main.Visible = not Main.Visible
-    end
-
-    -- Phím tắt để bật/tắt UI
-    UserInputService.InputBegan:Connect(function(input)
-        if input.KeyCode == GuiConfig["ToggleKey"] then
-            GuiFunc:ToggleUI()
-        end
-    end)
-
-    -- Nút bật/tắt UI
-    local ToggleOpen = Instance.new("Frame", AzuGui)
-    ToggleOpen.AnchorPoint = Vector2.new(0, 0.5)
-    ToggleOpen.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-    ToggleOpen.BackgroundTransparency = 0.1
-    ToggleOpen.Position = UDim2.new(0, Main.Position.X.Offset - 50, 0.5, 0)
-    ToggleOpen.Size = UDim2.new(0, 50, 0, 50)
-    ToggleOpen.Visible = false
-    Instance.new("UICorner", ToggleOpen).CornerRadius = UDim.new(0, 5)
-
-    local OpenButton = Instance.new("TextButton", ToggleOpen)
-    OpenButton.Font = Enum.Font.IndieFlower
-    OpenButton.Text = "Open"
-    OpenButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-    OpenButton.TextSize = 30
-    OpenButton.BackgroundTransparency = 1
-    OpenButton.Size = UDim2.new(1, 0, 1, 0)
-
-    HideButton.Activated:Connect(function()
-        ToggleOpen.Visible = true
-        GuiFunc:ToggleUI()
-    end)
-    CloseButton.Activated:Connect(function()
-        ToggleOpen.Visible = true
-        GuiFunc:ToggleUI()
-        GuiConfig.CloseCallBack()
-    end)
-    OpenButton.Activated:Connect(function()
-        ToggleOpen.Visible = false
-        GuiFunc:ToggleUI()
-    end)
-
-    -- Tab và Layers
-    local LayersTab = Instance.new("Frame", Main)
-    LayersTab.BackgroundTransparency = 1
-    LayersTab.Position = UDim2.new(0, 4, 0, 48)
-    LayersTab.Size = UDim2.new(0, GuiConfig["Tab Width"], 1, -56)
-
-    local ScrollTab = Instance.new("ScrollingFrame", LayersTab)
-    ScrollTab.CanvasSize = UDim2.new(0, 0, 0, 0)
-    ScrollTab.ScrollBarThickness = 2
+    local ScrollTab = Instance.new("ScrollingFrame", Tabs)
+    ScrollTab.Size = UDim2.new(1, 0, 1, -50)
     ScrollTab.BackgroundTransparency = 1
-    ScrollTab.Size = UDim2.new(1, 0, 1, -45)
-
+    ScrollTab.ScrollBarThickness = 2
+    ScrollTab.ScrollBarImageTransparency = 0.7
     local UIListLayout = Instance.new("UIListLayout", ScrollTab)
-    UIListLayout.Padding = UDim.new(0, 3)
-
-    local function UpSize()
-        local OffsetY = 0
-        for _, child in ScrollTab:GetChildren() do
-            if child.Name ~= "UIListLayout" then
-                OffsetY = OffsetY + 3 + child.Size.Y.Offset
-            end
-        end
-        ScrollTab.CanvasSize = UDim2.new(0, 0, 0, OffsetY)
-    end
-    ScrollTab.ChildAdded:Connect(UpSize)
-    ScrollTab.ChildRemoved:Connect(UpSize)
+    UIListLayout.Padding = UDim.new(0, 5)
 
     local Layers = Instance.new("Frame", Main)
+    Layers.Size = UDim2.new(1, -GuiConfig.TabWidth - 10, 1, -50)
+    Layers.Position = UDim2.new(0, GuiConfig.TabWidth + 5, 0, 45)
     Layers.BackgroundTransparency = 1
-    Layers.Position = UDim2.new(0, GuiConfig["Tab Width"] + 8, 0, 48)
-    Layers.Size = UDim2.new(1, -(GuiConfig["Tab Width"] + 16), 1, -56)
     Layers.ClipsDescendants = true
 
     local LayersFolder = Instance.new("Folder", Layers)
     local LayersPageLayout = Instance.new("UIPageLayout", LayersFolder)
-    LayersPageLayout.EasingStyle = Enum.EasingStyle.Quad
-    LayersPageLayout.TweenTime = 0.01
+    LayersPageLayout.EasingStyle = Enum.EasingStyle.Quart
+    LayersPageLayout.TweenTime = 0.2
 
-    -- Tabs
-    local Tabs = {}
-    local CountTab = 0
-
-    function Tabs:MakeTab(TabName)
+    local TabFunctions = {}
+    function TabFunctions:MakeTab(TabName)
+        local Items = {}
         local ScrollLayers = Instance.new("ScrollingFrame", LayersFolder)
-        ScrollLayers.CanvasSize = UDim2.new(0, 0, 1.5, 0)
-        ScrollLayers.ScrollBarThickness = 2
-        ScrollLayers.BackgroundTransparency = 1
         ScrollLayers.Size = UDim2.new(1, 0, 1, 0)
-        ScrollLayers.LayoutOrder = CountTab
+        ScrollLayers.BackgroundTransparency = 1
+        ScrollLayers.ScrollBarThickness = 2
+        ScrollLayers.ScrollBarImageTransparency = 0.7
+        ScrollLayers.LayoutOrder = #ScrollTab:GetChildren() - 1
 
-        local UIListLayout1 = Instance.new("UIListLayout", ScrollLayers)
-        UIListLayout1.Padding = UDim.new(0, 4)
+        local UIListLayout2 = Instance.new("UIListLayout", ScrollLayers)
+        UIListLayout2.Padding = UDim.new(0, 5)
 
-        local function UpSize2()
-            local OffsetY = 0
-            for _, child in ScrollLayers:GetChildren() do
-                if child.Name ~= "UIListLayout" then
-                    OffsetY = OffsetY + 4 + child.Size.Y.Offset
-                end
-            end
-            ScrollLayers.CanvasSize = UDim2.new(0, 0, 0, OffsetY)
-        end
-        ScrollLayers.ChildAdded:Connect(UpSize2)
-        ScrollLayers.ChildRemoved:Connect(UpSize2)
-
-        local Tab = Instance.new("Frame", ScrollTab)
-        Tab.BackgroundTransparency = 1
-        Tab.Size = UDim2.new(1, -5, 0, 30)
-        Tab.LayoutOrder = CountTab
-
-        local TabButton = Instance.new("TextButton", Tab)
-        TabButton.Font = Enum.Font.GothamBold
+        local TabButton = Instance.new("TextButton", ScrollTab)
+        TabButton.Size = UDim2.new(1, -10, 0, 35)
+        TabButton.BackgroundColor3 = WazureV3.CurrentTheme.Secondary
         TabButton.Text = TabName
-        TabButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-        TabButton.TextSize = 15
-        TabButton.BackgroundTransparency = 1
-        TabButton.Size = UDim2.new(1, 0, 1, 0)
-        TabButton.TextTransparency = 0.5
-
-        local ChoosingFrame = Instance.new("Frame", Tab)
-        ChoosingFrame.BackgroundColor3 = GuiConfig["Color"]
-        ChoosingFrame.Position = UDim2.new(0, 0, 0, 3)
-        ChoosingFrame.Size = UDim2.new(0, 0, 0, 0)
-
-        if CountTab == 0 then
-            LayersPageLayout:JumpToIndex(0)
-            TabButton.TextTransparency = 0
-            ChoosingFrame.Size = UDim2.new(0, 1, 0, 24)
-        end
+        TabButton.Font = Enum.Font.GothamBold
+        TabButton.TextColor3 = WazureV3.CurrentTheme.Text
+        TabButton.TextSize = 14
+        Instance.new("UICorner", TabButton).CornerRadius = UDim.new(0, 4)
 
         TabButton.Activated:Connect(function()
-            if Tab.LayoutOrder ~= LayersPageLayout.CurrentPage.LayoutOrder then
-                for _, TabFrame in ScrollTab:GetChildren() do
-                    if TabFrame.Name ~= "UIListLayout" and TabFrame.LayoutOrder ~= Tab.LayoutOrder then
-                        TweenService:Create(TabFrame.TabButton, TweenInfo.new(0.3), {TextTransparency = 0.5}):Play()
-                        TweenService:Create(TabFrame.ChoosingFrame, TweenInfo.new(0.4), {Size = UDim2.new(0, 1, 0, 0)}):Play()
-                    end
+            LayersPageLayout:JumpTo(ScrollLayers)
+            for _, tab in ScrollTab:GetChildren() do
+                if tab:IsA("TextButton") and tab ~= TabButton then
+                    TweenService:Create(tab, TweenInfo.new(0.2), {BackgroundColor3 = WazureV3.CurrentTheme.Secondary}):Play()
                 end
-                LayersPageLayout:JumpToIndex(Tab.LayoutOrder)
-                TweenService:Create(ChoosingFrame, TweenInfo.new(0.4), {Size = UDim2.new(0, 1, 0, 24)}):Play()
-                TweenService:Create(TabButton, TweenInfo.new(0.4), {TextTransparency = 0}):Play()
             end
+            TweenService:Create(TabButton, TweenInfo.new(0.2), {BackgroundColor3 = WazureV3.CurrentTheme.Accent}):Play()
         end)
 
-        local Items = {}
-        local CountItem = 0
+        if #ScrollTab:GetChildren() == 1 then
+            LayersPageLayout:JumpTo(ScrollLayers)
+            TabButton.BackgroundColor3 = WazureV3.CurrentTheme.Accent
+        end
 
-        function Items:MakeToggle(ToggleName, ToggleConfig)
-            local ToggleConfig = ToggleConfig or {}
-            ToggleConfig.Title = ToggleConfig.Title or "Toggle"
-            ToggleConfig.Default = ToggleConfig.Default or false
-            ToggleConfig.Callback = ToggleConfig.Callback or function() end
-            local ToggleFunc = {Type = "Toggle", Value = ToggleConfig.Default}
+        local function UpdateCanvasSize()
+            local height = 0
+            for _, child in ScrollLayers:GetChildren() do
+                if child:IsA("Frame") then height = height + child.Size.Y.Offset + 5 end
+            end
+            ScrollLayers.CanvasSize = UDim2.new(0, 0, 0, height)
+        end
 
+        ScrollLayers.ChildAdded:Connect(UpdateCanvasSize)
+        ScrollLayers.ChildRemoved:Connect(UpdateCanvasSize)
+
+        function Items:MakeSeperator(Text)
+            local Separator = Instance.new("Frame", ScrollLayers)
+            Separator.Size = UDim2.new(1, -10, 0, 20)
+            Separator.BackgroundTransparency = 1
+
+            local Line = Instance.new("Frame", Separator)
+            Line.Size = UDim2.new(1, 0, 0, 1)
+            Line.Position = UDim2.new(0, 0, 0.5, 0)
+            Line.BackgroundColor3 = WazureV3.CurrentTheme.Accent
+
+            local Label = Instance.new("TextLabel", Separator)
+            Label.Text = Text or ""
+            Label.Font = Enum.Font.GothamBold
+            Label.TextColor3 = WazureV3.CurrentTheme.Text
+            Label.TextSize = 12
+            Label.Size = UDim2.new(0, 100, 0, 20)
+            Label.Position = UDim2.new(0.5, -50, 0, 0)
+            Label.BackgroundTransparency = 1
+            Label.TextXAlignment = Enum.TextXAlignment.Center
+        end
+
+        function Items:MakeLabel(Text)
+            local LabelFrame = Instance.new("Frame", ScrollLayers)
+            LabelFrame.Size = UDim2.new(1, -10, 0, 30)
+            LabelFrame.BackgroundTransparency = 1
+
+            local Label = Instance.new("TextLabel", LabelFrame)
+            Label.Text = Text or "Label"
+            Label.Font = Enum.Font.Gotham
+            Label.TextColor3 = WazureV3.CurrentTheme.Text
+            Label.TextSize = 14
+            Label.Size = UDim2.new(1, 0, 1, 0)
+            Label.BackgroundTransparency = 1
+        end
+
+        function Items:MakeButton(Name, ButtonConfig)
+            local ButtonConfig = ButtonConfig or {}
+            local Button = Instance.new("Frame", ScrollLayers)
+            Button.Size = UDim2.new(1, -10, 0, 40)
+            Button.BackgroundColor3 = WazureV3.CurrentTheme.Secondary
+            Instance.new("UICorner", Button).CornerRadius = UDim.new(0, 4)
+
+            local ButtonText = Instance.new("TextButton", Button)
+            ButtonText.Size = UDim2.new(1, -50, 1, 0)
+            ButtonText.Position = UDim2.new(0, 10, 0, 0)
+            ButtonText.Text = ButtonConfig.Title or Name or "Button"
+            ButtonText.Font = Enum.Font.GothamBold
+            ButtonText.TextColor3 = WazureV3.CurrentTheme.Text
+            ButtonText.TextSize = 14
+            ButtonText.BackgroundTransparency = 1
+
+            local ButtonIcon = Instance.new("ImageLabel", Button)
+            ButtonIcon.Size = UDim2.new(0, 20, 0, 20)
+            ButtonIcon.Position = UDim2.new(1, -30, 0.5, -10)
+            ButtonIcon.Image = ButtonConfig.Logo or ""
+            ButtonIcon.BackgroundTransparency = 1
+
+            ButtonText.Activated:Connect(function()
+                if ButtonConfig.Callback then ButtonConfig.Callback() end
+            end)
+
+            AddTooltip(Button, ButtonConfig.Content or "Button Description")
+        end
+
+        function Items:MakeTextInput(Name, InputConfig)
+            local InputConfig = InputConfig or {}
+            local Input = Instance.new("Frame", ScrollLayers)
+            Input.Size = UDim2.new(1, -10, 0, 50)
+            Input.BackgroundColor3 = WazureV3.CurrentTheme.Secondary
+            Instance.new("UICorner", Input).CornerRadius = UDim.new(0, 4)
+
+            local Title = Instance.new("TextLabel", Input)
+            Title.Text = InputConfig.Title or Name or "Input"
+            Title.Font = Enum.Font.GothamBold
+            Title.TextColor3 = WazureV3.CurrentTheme.Text
+            Title.TextSize = 14
+            Title.Position = UDim2.new(0, 10, 0, 5)
+            Title.Size = UDim2.new(1, -10, 0, 20)
+            Title.BackgroundTransparency = 1
+
+            local TextBox = Instance.new("TextBox", Input)
+            TextBox.Size = UDim2.new(1, -20, 0, 20)
+            TextBox.Position = UDim2.new(0, 10, 0, 25)
+            TextBox.BackgroundColor3 = WazureV3.CurrentTheme.Primary
+            TextBox.Text = ""
+            TextBox.Font = Enum.Font.Gotham
+            TextBox.TextColor3 = WazureV3.CurrentTheme.Text
+            TextBox.TextSize = 12
+            TextBox.ClearTextOnFocus = false
+            Instance.new("UICorner", TextBox).CornerRadius = UDim.new(0, 4)
+
+            TextBox.FocusLost:Connect(function()
+                if InputConfig.Callback then InputConfig.Callback(TextBox.Text) end
+            end)
+
+            AddTooltip(Input, InputConfig.Content or "Input Description")
+            return {Value = function() return TextBox.Text end}
+        end
+
+        function Items:MakeToggle(Name, ToggleConfig)
+            ToggleConfig = ToggleConfig or {}
             local Toggle = Instance.new("Frame", ScrollLayers)
-            Toggle.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-            Toggle.BackgroundTransparency = 0.3
-            Toggle.Size = UDim2.new(1, -8, 0, 60)
-            Toggle.LayoutOrder = CountItem
-            Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0, 3)
+            Toggle.Size = UDim2.new(1, -10, 0, 50)
+            Toggle.BackgroundColor3 = WazureV3.CurrentTheme.Secondary
+            Instance.new("UICorner", Toggle).CornerRadius = UDim.new(0, 4)
 
-            local ToggleTitle = Instance.new("TextLabel", Toggle)
-            ToggleTitle.Font = Enum.Font.GothamBold
-            ToggleTitle.Text = ToggleConfig.Title
-            ToggleTitle.TextColor3 = Color3.fromRGB(255, 255, 255)
-            ToggleTitle.TextSize = 12
-            ToggleTitle.TextXAlignment = Enum.TextXAlignment.Left
-            ToggleTitle.Position = UDim2.new(0, 5, 0, 1)
-            ToggleTitle.Size = UDim2.new(1, -100, 0, 12)
+            local Title = Instance.new("TextLabel", Toggle)
+            Title.Text = ToggleConfig.Title or Name or "Toggle"
+            Title.Font = Enum.Font.GothamBold
+            Title.TextColor3 = WazureV3.CurrentTheme.Text
+            Title.TextSize = 14
+            Title.Position = UDim2.new(0, 10, 0, 5)
+            Title.Size = UDim2.new(1, -60, 0, 20)
+            Title.BackgroundTransparency = 1
 
-            local ToggleSwitch = Instance.new("Frame", Toggle)
-            ToggleSwitch.AnchorPoint = Vector2.new(1, 0.5)
-            ToggleSwitch.BackgroundColor3 = Color3.fromRGB(67, 67, 67)
-            ToggleSwitch.Position = UDim2.new(1, -45, 0.5, 0)
-            ToggleSwitch.Size = UDim2.new(0, 40, 0, 20)
-            Instance.new("UICorner", ToggleSwitch).CornerRadius = UDim.new(1, 0)
+            local Switch = Instance.new("Frame", Toggle)
+            Switch.Size = UDim2.new(0, 40, 0, 20)
+            Switch.Position = UDim2.new(1, -45, 0.5, 0)
+            Switch.AnchorPoint = Vector2.new(1, 0.5)
+            Switch.BackgroundColor3 = WazureV3.CurrentTheme.Primary
+            Instance.new("UICorner", Switch).CornerRadius = UDim.new(1, 0)
 
-            local ToggleSwitch2 = Instance.new("Frame", ToggleSwitch)
-            ToggleSwitch2.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
-            ToggleSwitch2.Position = UDim2.new(0, 2, 0, 2)
-            ToggleSwitch2.Size = UDim2.new(1, -4, 1, -4)
-            Instance.new("UICorner", ToggleSwitch2).CornerRadius = UDim.new(1, 0)
+            local Knob = Instance.new("Frame", Switch)
+            Knob.Size = UDim2.new(0, 16, 0, 16)
+            Knob.Position = ToggleConfig.Default and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+            Knob.AnchorPoint = Vector2.new(0, 0.5)
+            Knob.BackgroundColor3 = ToggleConfig.Default and WazureV3.CurrentTheme.Accent or WazureV3.CurrentTheme.Primary
+            Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
 
-            local SwitchImage = Instance.new("ImageLabel", ToggleSwitch2)
-            SwitchImage.Image = "rbxassetid://3926305904"
-            SwitchImage.ImageColor3 = Color3.fromRGB(72, 73, 74)
-            SwitchImage.ImageRectOffset = Vector2.new(124, 124)
-            SwitchImage.ImageRectSize = Vector2.new(36, 36)
-            SwitchImage.BackgroundTransparency = 1
-            SwitchImage.Position = UDim2.new(0, 0, 0, 0)
-            SwitchImage.Size = UDim2.new(0, 16, 0, 16)
-
-            local ToggleButton = Instance.new("TextButton", Toggle)
-            ToggleButton.BackgroundTransparency = 1
-            ToggleButton.Size = UDim2.new(1, 0, 1, 0)
-
-            function ToggleFunc:Set(Value)
-                ToggleFunc.Value = Value or ToggleFunc.Value
-                if Value then
-                    TweenService:Create(ToggleTitle, TweenInfo.new(0.2), {TextColor3 = GuiConfig["Color"]}):Play()
-                    TweenService:Create(ToggleSwitch, TweenInfo.new(0.2), {BackgroundColor3 = GuiConfig["Color"]}):Play()
-                    TweenService:Create(ToggleSwitch2, TweenInfo.new(0.2), {BackgroundColor3 = GuiConfig["Color"]}):Play()
-                    TweenService:Create(SwitchImage, TweenInfo.new(0.2), {Position = UDim2.new(0, 20, 0, 0), ImageColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-                else
-                    TweenService:Create(ToggleTitle, TweenInfo.new(0.2), {TextColor3 = Color3.fromRGB(255, 255, 255)}):Play()
-                    TweenService:Create(ToggleSwitch, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(67, 67, 67)}):Play()
-                    TweenService:Create(ToggleSwitch2, TweenInfo.new(0.2), {BackgroundColor3 = Color3.fromRGB(25, 25, 25)}):Play()
-                    TweenService:Create(SwitchImage, TweenInfo.new(0.2), {Position = UDim2.new(0, 0, 0, 0), ImageColor3 = Color3.fromRGB(72, 73, 74)}):Play()
-                end
-                saveData(GuiConfig["Save Config"]["Folder"], GuiConfig["Save Config"]["Name Config"], Tabs)
-                ToggleConfig.Callback(Value)
+            local ToggleFunc = {Value = ToggleConfig.Default or false}
+            local function UpdateToggle(value)
+                ToggleFunc.Value = value
+                TweenService:Create(Knob, TweenInfo.new(0.2), {
+                    Position = value and UDim2.new(1, -18, 0.5, 0) or UDim2.new(0, 2, 0.5, 0),
+                    BackgroundColor3 = value and WazureV3.CurrentTheme.Accent or WazureV3.CurrentTheme.Primary
+                }):Play()
+                if ToggleConfig.Callback then ToggleConfig.Callback(value) end
             end
 
-            ToggleButton.Activated:Connect(function()
-                ToggleFunc.Value = not ToggleFunc.Value
-                ToggleFunc:Set(ToggleFunc.Value)
+            Toggle.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    UpdateToggle(not ToggleFunc.Value)
+                end
             end)
-            ToggleFunc:Set(ToggleFunc.Value)
 
-            Items[ToggleName] = ToggleFunc
-            CountItem = CountItem + 1
+            AddTooltip(Toggle, ToggleConfig.Content or "Toggle Description")
+
+            function ToggleFunc:AddSetting()
+                local SettingFrame = Instance.new("Frame", ScrollLayers)
+                SettingFrame.Size = UDim2.new(1, -20, 0, 0)
+                SettingFrame.Position = UDim2.new(0, 10, 0, 0)
+                SettingFrame.BackgroundColor3 = WazureV3.CurrentTheme.Primary
+                SettingFrame.Visible = false
+                Instance.new("UICorner", SettingFrame).CornerRadius = UDim.new(0, 4)
+
+                local SettingList = Instance.new("UIListLayout", SettingFrame)
+                SettingList.Padding = UDim.new(0, 5)
+
+                local SettingFunc = {}
+                function SettingFunc:Toggle(Name, Config)
+                    local Config = Config or {}
+                    local SubToggle = Instance.new("Frame", SettingFrame)
+                    SubToggle.Size = UDim2.new(1, -10, 0, 30)
+                    SubToggle.BackgroundColor3 = WazureV3.CurrentTheme.Secondary
+                    Instance.new("UICorner", SubToggle).CornerRadius = UDim.new(0, 4)
+
+                    local SubTitle = Instance.new("TextLabel", SubToggle)
+                    SubTitle.Text = Config.Name or Name or "Sub Toggle"
+                    SubTitle.Font = Enum.Font.Gotham
+                    SubTitle.TextColor3 = WazureV3.CurrentTheme.Text
+                    SubTitle.TextSize = 12
+                    SubTitle.Position = UDim2.new(0, 10, 0, 5)
+                    SubTitle.Size = UDim2.new(1, -60, 0, 20)
+                    SubTitle.BackgroundTransparency = 1
+
+                    local SubSwitch = Instance.new("Frame", SubToggle)
+                    SubSwitch.Size = UDim2.new(0, 30, 0, 15)
+                    SubSwitch.Position = UDim2.new(1, -40, 0.5, 0)
+                    SubSwitch.AnchorPoint = Vector2.new(1, 0.5)
+                    SubSwitch.BackgroundColor3 = WazureV3.CurrentTheme.Primary
+                    Instance.new("UICorner", SubSwitch).CornerRadius = UDim.new(1, 0)
+
+                    local SubKnob = Instance.new("Frame", SubSwitch)
+                    SubKnob.Size = UDim2.new(0, 12, 0, 12)
+                    SubKnob.Position = Config.Default and UDim2.new(1, -14, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+                    SubKnob.AnchorPoint = Vector2.new(0, 0.5)
+                    SubKnob.BackgroundColor3 = Config.Default and WazureV3.CurrentTheme.Accent or WazureV3.CurrentTheme.Primary
+                    Instance.new("UICorner", SubKnob).CornerRadius = UDim.new(1, 0)
+
+                    local SubToggleFunc = {Value = Config.Default or false}
+                    local function UpdateSubToggle(value)
+                        SubToggleFunc.Value = value
+                        TweenService:Create(SubKnob, TweenInfo.new(0.2), {
+                            Position = value and UDim2.new(1, -14, 0.5, 0) or UDim2.new(0, 2, 0.5, 0),
+                            BackgroundColor3 = value and WazureV3.CurrentTheme.Accent or WazureV3.CurrentTheme.Primary
+                        }):Play()
+                        if Config.Callback then Config.Callback(value) end
+                    end
+
+                    SubToggle.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                            UpdateSubToggle(not SubToggleFunc.Value)
+                        end
+                    end)
+
+                    SettingFrame.Size = UDim2.new(1, -20, 0, SettingList.AbsoluteContentSize.Y + 10)
+                    SettingFrame.Visible = ToggleFunc.Value
+                    return SubToggleFunc
+                end
+
+                function SettingFunc:Slider(Name, Config)
+                    local Config = Config or {}
+                    local SubSlider = Instance.new("Frame", SettingFrame)
+                    SubSlider.Size = UDim2.new(1, -10, 0, 40)
+                    SubSlider.BackgroundColor3 = WazureV3.CurrentTheme.Secondary
+                    Instance.new("UICorner", SubSlider).CornerRadius = UDim.new(0, 4)
+
+                    local SubTitle = Instance.new("TextLabel", SubSlider)
+                    SubTitle.Text = Config.Name or Name or "Sub Slider"
+                    SubTitle.Font = Enum.Font.Gotham
+                    SubTitle.TextColor3 = WazureV3.CurrentTheme.Text
+                    SubTitle.TextSize = 12
+                    SubTitle.Position = UDim2.new(0, 10, 0, 5)
+                    SubTitle.Size = UDim2.new(1, -10, 0, 15)
+                    SubTitle.BackgroundTransparency = 1
+
+                    local Bar = Instance.new("Frame", SubSlider)
+                    Bar.Size = UDim2.new(1, -20, 0, 4)
+                    Bar.Position = UDim2.new(0, 10, 0, 25)
+                    Bar.BackgroundColor3 = WazureV3.CurrentTheme.Primary
+                    Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
+
+                    local Fill = Instance.new("Frame", Bar)
+                    Fill.Size = UDim2.new((Config.Default or 0) / (Config.Max or 100), 0, 1, 0)
+                    Fill.BackgroundColor3 = WazureV3.CurrentTheme.Accent
+                    Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+
+                    local SliderFunc = {Value = Config.Default or 0}
+                    local Dragging = false
+
+                    local function UpdateSlider(input)
+                        local SizeScale = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+                        local Value = Config.Min + ((Config.Max - Config.Min) * SizeScale)
+                        Value = math.floor(Value / (Config.Increment or 1) + 0.5) * (Config.Increment or 1)
+                        SliderFunc.Value = math.clamp(Value, Config.Min or 0, Config.Max or 100)
+                        TweenService:Create(Fill, TweenInfo.new(0.1), {Size = UDim2.new(SliderFunc.Value / (Config.Max or 100), 0, 1, 0)}):Play()
+                        if Config.Callback then Config.Callback(SliderFunc.Value) end
+                    end
+
+                    SubSlider.InputBegan:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then Dragging = true end
+                    end)
+
+                    SubSlider.InputEnded:Connect(function(input)
+                        if input.UserInputType == Enum.UserInputType.MouseButton1 then Dragging = false end
+                    end)
+
+                    UserInputService.InputChanged:Connect(function(input)
+                        if Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then UpdateSlider(input) end
+                    end)
+
+                    SettingFrame.Size = UDim2.new(1, -20, 0, SettingList.AbsoluteContentSize.Y + 10)
+                    SettingFrame.Visible = ToggleFunc.Value
+                    return SliderFunc
+                end
+
+                Toggle:GetPropertyChangedSignal("Visible"):Connect(function()
+                    SettingFrame.Visible = ToggleFunc.Value
+                end)
+
+                return SettingFunc
+            end
+
+            UpdateToggle(ToggleFunc.Value)
             return ToggleFunc
         end
 
-        CountTab = CountTab + 1
-        Tabs[TabName] = Items
+        function Items:MakeSlider(Name, SliderConfig)
+            SliderConfig = SliderConfig or {}
+            local Slider = Instance.new("Frame", ScrollLayers)
+            Slider.Size = UDim2.new(1, -10, 0, 60)
+            Slider.BackgroundColor3 = WazureV3.CurrentTheme.Secondary
+            Instance.new("UICorner", Slider).CornerRadius = UDim.new(0, 4)
+
+            local Title = Instance.new("TextLabel", Slider)
+            Title.Text = SliderConfig.Title or Name or "Slider"
+            Title.Font = Enum.Font.GothamBold
+            Title.TextColor3 = WazureV3.CurrentTheme.Text
+            Title.TextSize = 14
+            Title.Position = UDim2.new(0, 10, 0, 5)
+            Title.Size = UDim2.new(1, -10, 0, 20)
+            Title.BackgroundTransparency = 1
+
+            local Bar = Instance.new("Frame", Slider)
+            Bar.Size = UDim2.new(1, -20, 0, 4)
+            Bar.Position = UDim2.new(0, 10, 0, 35)
+            Bar.BackgroundColor3 = WazureV3.CurrentTheme.Primary
+            Instance.new("UICorner", Bar).CornerRadius = UDim.new(1, 0)
+
+            local Fill = Instance.new("Frame", Bar)
+            Fill.Size = UDim2.new((SliderConfig.Default or 0) / (SliderConfig.Max or 100), 0, 1, 0)
+            Fill.BackgroundColor3 = WazureV3.CurrentTheme.Accent
+            Instance.new("UICorner", Fill).CornerRadius = UDim.new(1, 0)
+
+            local SliderFunc = {Value = SliderConfig.Default or 0}
+            local Dragging = false
+
+            local function UpdateSlider(input)
+                local SizeScale = math.clamp((input.Position.X - Bar.AbsolutePosition.X) / Bar.AbsoluteSize.X, 0, 1)
+                local Value = SliderConfig.Min + ((SliderConfig.Max - SliderConfig.Min) * SizeScale)
+                Value = math.floor(Value / (SliderConfig.Increment or 1) + 0.5) * (SliderConfig.Increment or 1)
+                SliderFunc.Value = math.clamp(Value, SliderConfig.Min or 0, SliderConfig.Max or 100)
+                TweenService:Create(Fill, TweenInfo.new(0.1), {Size = UDim2.new(SliderFunc.Value / (SliderConfig.Max or 100), 0, 1, 0)}):Play()
+                if SliderConfig.Callback then SliderConfig.Callback(SliderFunc.Value) end
+            end
+
+            Slider.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then Dragging = true end
+            end)
+
+            Slider.InputEnded:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then Dragging = false end
+            end)
+
+            UserInputService.InputChanged:Connect(function(input)
+                if Dragging and input.UserInputType == Enum.UserInputType.MouseMovement then UpdateSlider(input) end
+            end)
+
+            AddTooltip(Slider, SliderConfig.Content or "Slider Description")
+            return SliderFunc
+        end
+
+        function Items:MakeDropdown(Name, DropdownConfig)
+            DropdownConfig = DropdownConfig or {}
+            local Dropdown = Instance.new("Frame", ScrollLayers)
+            Dropdown.Size = UDim2.new(1, -10, 0, 40)
+            Dropdown.BackgroundColor3 = WazureV3.CurrentTheme.Secondary
+            Instance.new("UICorner", Dropdown).CornerRadius = UDim.new(0, 4)
+
+            local Title = Instance.new("TextLabel", Dropdown)
+            Title.Text = DropdownConfig.Title or Name or "Dropdown"
+            Title.Font = Enum.Font.GothamBold
+            Title.TextColor3 = WazureV3.CurrentTheme.Text
+            Title.TextSize = 14
+            Title.Position = UDim2.new(0, 10, 0, 5)
+            Title.Size = UDim2.new(1, -40, 0, 20)
+            Title.BackgroundTransparency = 1
+
+            local DropFrame = Instance.new("Frame", Dropdown)
+            DropFrame.Size = UDim2.new(0, 0, 0, 100)
+            DropFrame.Position = UDim2.new(0, 10, 0, 40)
+            DropFrame.BackgroundColor3 = WazureV3.CurrentTheme.Primary
+            DropFrame.Visible = false
+            Instance.new("UICorner", DropFrame).CornerRadius = UDim.new(0, 4)
+
+            local ScrollDrop = Instance.new("ScrollingFrame", DropFrame)
+            ScrollDrop.Size = UDim2.new(1, -10, 1, -10)
+            ScrollDrop.Position = UDim2.new(0, 5, 0, 5)
+            ScrollDrop.BackgroundTransparency = 1
+            ScrollDrop.ScrollBarThickness = 2
+            local DropList = Instance.new("UIListLayout", ScrollDrop)
+            DropList.Padding = UDim.new(0, 5)
+
+            local DropdownFunc = {Value = DropdownConfig.Default or {}, Options = DropdownConfig.Options or {}}
+            local Open = false
+
+            local function ToggleDropdown()
+                Open = not Open
+                TweenService:Create(DropFrame, TweenInfo.new(0.2), {Size = Open and UDim2.new(1, -20, 0, 100) or UDim2.new(0, 0, 0, 100)}):Play()
+                DropFrame.Visible = true
+                task.delay(0.2, function() if not Open then DropFrame.Visible = false end end)
+            end
+
+            Dropdown.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then ToggleDropdown() end
+            end)
+
+            for _, option in ipairs(DropdownConfig.Options or {}) do
+                local OptionButton = Instance.new("TextButton", ScrollDrop)
+                OptionButton.Size = UDim2.new(1, 0, 0, 25)
+                OptionButton.BackgroundColor3 = WazureV3.CurrentTheme.Secondary
+                OptionButton.Text = option
+                OptionButton.Font = Enum.Font.Gotham
+                OptionButton.TextColor3 = WazureV3.CurrentTheme.Text
+                OptionButton.TextSize = 12
+                Instance.new("UICorner", OptionButton).CornerRadius = UDim.new(0, 4)
+
+                OptionButton.Activated:Connect(function()
+                    if DropdownConfig.Multi then
+                        if table.find(DropdownFunc.Value, option) then
+                            table.remove(DropdownFunc.Value, table.find(DropdownFunc.Value, option))
+                        else
+                            table.insert(DropdownFunc.Value, option)
+                        end
+                    else
+                        DropdownFunc.Value = {option}
+                        ToggleDropdown()
+                    end
+                    if DropdownConfig.Callback then DropdownConfig.Callback(DropdownConfig.Multi and DropdownFunc.Value or DropdownFunc.Value[1]) end
+                end)
+            end
+
+            AddTooltip(Dropdown, DropdownConfig.Content or "Dropdown Description")
+            return DropdownFunc
+        end
+
         return Items
     end
 
-    -- Tải cấu hình đã lưu
-    local loadedConfig = loadData(GuiConfig["Save Config"]["Folder"], GuiConfig["Save Config"]["Name Config"])
-    for tabName, items in pairs(loadedConfig) do
-        local tab = Tabs:MakeTab(tabName)
-        for itemName, itemData in pairs(items) do
-            if itemData.Type == "Toggle" then
-                tab:MakeToggle(itemName, {
-                    Title = itemName,
-                    Default = itemData.Value,
-                    Callback = function(value) print(itemName .. " set to " .. tostring(value)) end
-                })
-            end
-        end
-    end
+    CloseButton.Activated:Connect(function()
+        AzuGui:Destroy()
+        if GuiConfig.CloseCallBack then GuiConfig.CloseCallBack() end
+    end)
 
-    return Tabs
+    return TabFunctions
 end
 
-return WazureV1
+return WazureV3
