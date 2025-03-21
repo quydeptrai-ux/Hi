@@ -6,6 +6,7 @@ local Mouse = LocalPlayer:GetMouse()
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
 local SoundService = game:GetService("SoundService")
+local Players = game:GetService("Players")
 
 -- Theme mặc định
 local Themes = {
@@ -1439,7 +1440,7 @@ function sitinklib:Start(config)
                 AddHoverEffect(ProgressFrame)
 
                 local ProgressTitle = Instance.new("TextLabel", ProgressFrame)
-                                ProgressTitle.Text = ProgressConfig.Title
+                ProgressTitle.Text = ProgressConfig.Title
                 ProgressTitle.Font = Enum.Font.GothamBold
                 ProgressTitle.TextColor3 = self.Theme.Text
                 ProgressTitle.TextSize = 14
@@ -1448,7 +1449,7 @@ function sitinklib:Start(config)
                 ProgressTitle.TextXAlignment = Enum.TextXAlignment.Left
 
                 local ProgressBar = Instance.new("Frame", ProgressFrame)
-                ProgressBar.Size = UDim2.new(1, -30, 0, 10)
+                                ProgressBar.Size = UDim2.new(1, -30, 0, 10)
                 ProgressBar.Position = UDim2.new(0, 15, 1, -20)
                 ProgressBar.BackgroundColor3 = self.Theme.Accent
                 Instance.new("UICorner", ProgressBar).CornerRadius = UDim.new(0, 5)
@@ -1494,7 +1495,6 @@ end
 -- Hàm đổi theme động
 function sitinklib:SetTheme(theme)
     self.Theme = theme or Themes.Default
-    -- Cập nhật theme cho các thành phần đã tạo (nếu cần mở rộng thêm logic)
 end
 
 -- Hàm mở/tắt GUI
@@ -1589,17 +1589,403 @@ end
 -- Hàm phá hủy GUI
 function sitinklib:Destroy()
     local gui = CoreGui:FindFirstChild("SitinkGui")
-    if gui then
-        gui:Destroy()
-    end
+    if gui then gui:Destroy() end
     local notifyGui = CoreGui:FindFirstChild("NotifyGui")
-    if notifyGui then
-        notifyGui:Destroy()
-    end
+    if notifyGui then notifyGui:Destroy() end
     local clickGui = CoreGui:FindFirstChild("ClickGui")
-    if clickGui then
-        clickGui:Destroy()
+    if clickGui then clickGui:Destroy() end
+end
+
+-- Phần thử nghiệm
+-- Theme tùy chỉnh
+local CustomTheme = {
+    Primary = Color3.fromRGB(255, 105, 180),
+    Secondary = Color3.fromRGB(40, 40, 50),
+    Background = Color3.fromRGB(20, 20, 30),
+    Text = Color3.fromRGB(240, 240, 255),
+    Accent = Color3.fromRGB(80, 80, 100),
+    Shadow = Color3.fromRGB(0, 0, 0),
+    Gradient = {Color3.fromRGB(255, 105, 180), Color3.fromRGB(147, 112, 219)}
+}
+
+sitinklib:SetTheme(CustomTheme)
+
+-- Âm thanh
+local ClickSound = Instance.new("Sound")
+ClickSound.SoundId = "rbxassetid://9118831625"
+ClickSound.Volume = 0.5
+ClickSound.Parent = SoundService
+
+local HoverSound = Instance.new("Sound")
+HoverSound.SoundId = "rbxassetid://9118831899"
+HoverSound.Volume = 0.3
+HoverSound.Parent = SoundService
+
+local function PlayClick() ClickSound:Play() end
+local function PlayHover() HoverSound:Play() end
+
+-- Thông báo khởi động
+sitinklib:Notify({
+    Title = "Ultimate Hub",
+    Description = "v3.2",
+    Content = "Welcome to the ultimate UI experience!",
+    Color = CustomTheme.Primary,
+    Time = 0.5,
+    Delay = 5
+})
+
+-- Tạo GUI
+local GUI = sitinklib:Start({
+    Name = "Ultimate Hub",
+    Description = "Powered by xAI",
+    InfoColor = CustomTheme.Primary,
+    LogoInfo = "rbxassetid://18243105495",
+    LogoPlayer = "https://www.roblox.com/headshot-thumbnail/image?userId=" .. LocalPlayer.UserId .. "&width=420&height=420&format=png",
+    NameInfo = "Hub Info",
+    NamePlayer = LocalPlayer.Name,
+    InfoDescription = "discord.gg/ultimatehub | v3.2",
+    TabWidth = 180,
+    Color = CustomTheme.Primary,
+    CloseCallBack = function()
+        sitinklib:Notify({Title = "Closed", Content = "See you next time!", Delay = 3})
+    end
+})
+
+sitinklib:FadeIn()
+
+-- Config mặc định
+local Config = {
+    SpeedBoost = false,
+    JumpPower = 50,
+    Team = "Red",
+    Inventory = {"Sword"},
+    DisplayName = LocalPlayer.DisplayName,
+    CharacterColor = Color3.fromRGB(255, 105, 180),
+    SpeedKey = Enum.KeyCode.Q,
+    AutoFarm = false,
+    Resources = {"Wood"},
+    AutoFarmKey = Enum.KeyCode.F,
+    Brightness = 1,
+    SkyColor = Color3.fromRGB(135, 206, 235)
+}
+
+-- Load config nếu có
+local loadedConfig = sitinklib:LoadConfig("ultimatehub_config.json")
+if loadedConfig then
+    for key, value in pairs(loadedConfig) do
+        Config[key] = value
     end
 end
 
-return sitinklib
+-- Tab 1: Player
+local PlayerTab = GUI:MakeTab("Player")
+local PlayerSection = PlayerTab:Section({Title = "Player Settings", Content = "Customize your character!"})
+
+local TeleportButton = PlayerSection:Button({
+    Title = "Teleport Random",
+    Content = "Teleports to a random player.",
+    Callback = function()
+        PlayClick()
+        local players = Players:GetPlayers()
+        local target = players[math.random(1, #players)]
+        if target ~= LocalPlayer and target.Character and target.Character:FindFirstChild("HumanoidRootPart") then
+            LocalPlayer.Character.HumanoidRootPart.CFrame = target.Character.HumanoidRootPart.CFrame
+            sitinklib:Notify({Title = "Teleported", Content = "To " .. target.Name, Delay = 3})
+        end
+    end
+})
+sitinklib:AddTooltip(TeleportButton.ButtonClick, "Teleport instantly!")
+
+local SpeedToggle = PlayerSection:Toggle({
+    Title = "Speed Boost",
+    Content = "Increases your walk speed.",
+    Default = Config.SpeedBoost,
+    Callback = function(value)
+        PlayClick()
+        Config.SpeedBoost = value
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.WalkSpeed = value and 32 or 16
+            sitinklib:Notify({Title = "Speed Boost", Content = value and "Enabled" or "Disabled", Delay = 2})
+        end
+    end
+})
+
+local JumpSlider = PlayerSection:Slider({
+    Title = "Jump Power",
+    Content = "Adjust jump height.",
+    Min = 50,
+    Max = 200,
+    Default = Config.JumpPower,
+    Callback = function(value)
+        PlayClick()
+        Config.JumpPower = value
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            LocalPlayer.Character.Humanoid.JumpPower = value
+        end
+    end
+})
+
+local TeamDropdown = PlayerSection:Dropdown({
+    Title = "Team Select",
+    Content = "Choose your team.",
+    Options = {"Red", "Blue", "Green", "Yellow", "Purple"},
+    Default = Config.Team,
+    Searchable = true,
+    Callback = function(value)
+        PlayClick()
+        Config.Team = value
+        sitinklib:Notify({Title = "Team Changed", Content = "Now on " .. value, Delay = 3})
+    end
+})
+
+local ItemsDropdown = PlayerSection:DropdownMulti({
+    Title = "Inventory",
+    Content = "Equip multiple items.",
+    Options = {"Sword", "Shield", "Bow", "Potion", "Staff"},
+    Default = Config.Inventory,
+    Searchable = true,
+    Callback = function(values)
+        PlayClick()
+        Config.Inventory = values
+        sitinklib:Notify({Title = "Items Equipped", Content = "Equipped: " .. table.concat(values, ", "), Delay = 3})
+    end
+})
+
+local NameInput = PlayerSection:TextInput({
+    Title = "Display Name",
+    Content = "Change your display name.",
+    Placeholder = "Enter new name...",
+    Default = Config.DisplayName,
+    Callback = function(value)
+        PlayClick()
+        Config.DisplayName = value
+        LocalPlayer.DisplayName = value
+        sitinklib:Notify({Title = "Name Changed", Content = "New name: " .. value, Delay = 3})
+    end
+})
+
+local StatusLabel = PlayerSection:Label({Text = "Status: Idle"})
+
+local CharacterColor = PlayerSection:ColorPicker({
+    Title = "Character Color",
+    Default = Config.CharacterColor,
+    Callback = function(color)
+        PlayClick()
+        Config.CharacterColor = color
+        if LocalPlayer.Character then
+            for _, part in pairs(LocalPlayer.Character:GetChildren()) do
+                if part:IsA("BasePart") then
+                    part.Color = color
+                end
+            end
+            sitinklib:Notify({Title = "Color Updated", Content = "Character color changed!", Delay = 2})
+        end
+    end
+})
+
+local SpeedKeybind = PlayerSection:Keybind({
+    Title = "Speed Boost Key",
+    Default = Config.SpeedKey,
+    Callback = function()
+        PlayClick()
+        SpeedToggle:Set(not SpeedToggle.Value)
+    end
+})
+
+local SpeedProgress = PlayerSection:ProgressBar({
+    Title = "Speed Progress",
+    Min = 0,
+    Max = 100,
+    Default = 0,
+    Color = CustomTheme.Primary
+})
+
+-- Tab 2: Visuals
+local VisualsTab = GUI:MakeTab("Visuals")
+local VisualsSection = VisualsTab:Section({Title = "Visual Effects", Content = "Enhance your visuals!"})
+
+local LightingToggle = VisualsSection:Toggle({
+    Title = "Dynamic Lighting",
+    Default = false,
+    Callback = function(value)
+        PlayClick()
+        game.Lighting.GlobalShadows = value
+        game.Lighting.Brightness = value and 2 or Config.Brightness
+        sitinklib:Notify({Title = "Lighting", Content = value and "Enabled" or "Disabled", Delay = 2})
+    end
+})
+
+local BrightnessSlider = VisualsSection:Slider({
+    Title = "Brightness",
+    Min = 0,
+    Max = 5,
+    Default = Config.Brightness,
+    Callback = function(value)
+        PlayClick()
+        Config.Brightness = value
+        game.Lighting.Brightness = value
+    end
+})
+
+local SkyColor = VisualsSection:ColorPicker({
+    Title = "Sky Color",
+    Default = Config.SkyColor,
+    Callback = function(color)
+        PlayClick()
+        Config.SkyColor = color
+        local sky = game.Lighting:FindFirstChildOfClass("Sky")
+        if sky then
+            sky.SkyboxBk = color
+            sky.SkyboxFt = color
+            sky.SkyboxLf = color
+            sky.SkyboxRt = color
+            sky.SkyboxUp = color
+            sky.SkyboxDn = color
+        end
+    end
+})
+
+-- Tab 3: Automation
+local AutoTab = GUI:MakeTab("Automation")
+local AutoSection = AutoTab:Section({Title = "Auto Features", Content = "Automate your gameplay!"})
+
+local AutoFarmToggle = AutoSection:Toggle({
+    Title = "Auto Farm",
+    Default = Config.AutoFarm,
+    Callback = function(value)
+        PlayClick()
+        Config.AutoFarm = value
+        if value then
+            spawn(function()
+                while AutoFarmToggle.Value do
+                    SpeedProgress:Set(SpeedProgress.Value + 10)
+                    task.wait(1)
+                    if SpeedProgress.Value >= 100 then
+                        SpeedProgress:Set(0)
+                        sitinklib:Notify({Title = "Farm Complete", Content = "Collected resources!", Delay = 3})
+                    end
+                end
+            end)
+        end
+    end
+})
+
+local ResourceDropdown = AutoSection:DropdownMulti({
+    Title = "Resources",
+    Options = {"Wood", "Stone", "Gold", "Food"},
+    Default = Config.Resources,
+    Searchable = true,
+    Callback = function(values)
+        PlayClick()
+        Config.Resources = values
+        sitinklib:Notify({Title = "Resources Selected", Content = "Farming: " .. table.concat(values, ", "), Delay = 3})
+    end
+})
+
+local AutoFarmKeybind = AutoSection:Keybind({
+    Title = "Auto Farm Key",
+    Default = Config.AutoFarmKey,
+    Callback = function()
+        PlayClick()
+        AutoFarmToggle:Set(not AutoFarmToggle.Value)
+    end
+})
+
+-- Tab 4: Config
+local ConfigTab = GUI:MakeTab("Config")
+local ConfigSection = ConfigTab:Section({Title = "Configuration", Content = "Manage your settings!"})
+
+local SaveButton = ConfigSection:Button({
+    Title = "Save Config",
+    Content = "Save current settings.",
+    Callback = function()
+        PlayClick()
+        sitinklib:SaveConfig("ultimatehub_config.json", Config)
+    end
+})
+sitinklib:AddTooltip(SaveButton.ButtonClick, "Save your settings to a file!")
+
+local LoadButton = ConfigSection:Button({
+    Title = "Load Config",
+    Content = "Load saved settings.",
+    Callback = function()
+        PlayClick()
+        local loaded = sitinklib:LoadConfig("ultimatehub_config.json")
+        if loaded then
+            Config = loaded
+            SpeedToggle:Set(Config.SpeedBoost)
+            JumpSlider:Set(Config.JumpPower)
+            TeamDropdown:Set(Config.Team)
+            ItemsDropdown:Set(Config.Inventory)
+            NameInput:Set(Config.DisplayName)
+            CharacterColor:Set(Config.CharacterColor)
+            SpeedKeybind:Set(Config.SpeedKey)
+            AutoFarmToggle:Set(Config.AutoFarm)
+            ResourceDropdown:Set(Config.Resources)
+            AutoFarmKeybind:Set(Config.AutoFarmKey)
+            BrightnessSlider:Set(Config.Brightness)
+            SkyColor:Set(Config.SkyColor)
+            sitinklib:Notify({Title = "Config Applied", Content = "Settings loaded successfully!", Delay = 3})
+        end
+    end
+})
+sitinklib:AddTooltip(LoadButton.ButtonClick, "Load your saved settings!")
+
+local DestroyButton = ConfigSection:Button({
+    Title = "Destroy GUI",
+    Content = "Remove the UI completely.",
+    Callback = function()
+        PlayClick()
+        sitinklib:Destroy()
+        sitinklib:Notify({Title = "GUI Destroyed", Content = "UI has been removed!", Delay = 3})
+    end
+})
+sitinklib:AddTooltip(DestroyButton.ButtonClick, "Destroy the UI permanently!")
+
+-- Logic tương tác
+spawn(function()
+    while task.wait(1) do
+        if LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid") then
+            StatusLabel:Set("Status: " .. (SpeedToggle.Value and "Boosted" or "Idle"))
+            if SpeedToggle.Value then
+                SpeedProgress:Set(SpeedProgress.Value + 5)
+            end
+        end
+    end
+end)
+
+-- Toggle GUI bằng phím
+UserInputService.InputBegan:Connect(function(input)
+    if input.KeyCode == Enum.KeyCode.RightShift then
+        PlayClick()
+        sitinklib:Toggle()
+    end
+end)
+
+-- Hiệu ứng hover
+local function ApplyHoverEffects()
+    for _, tab in pairs(GUI) do
+        for _, section in pairs(tab) do
+            for _, item in pairs(section) do
+                if item.ButtonClick then
+                    item.ButtonClick.MouseEnter:Connect(PlayHover)
+                end
+            end
+        end
+    end
+end
+ApplyHoverEffects()
+
+-- Theme động (ví dụ)
+task.delay(10, function()
+    sitinklib:SetTheme({
+        Primary = Color3.fromRGB(100, 255, 100),
+        Secondary = Color3.fromRGB(50, 50, 60),
+        Background = Color3.fromRGB(25, 25, 35),
+        Text = Color3.fromRGB(230, 230, 255),
+        Accent = Color3.fromRGB(70, 70, 90),
+        Shadow = Color3.fromRGB(0, 0, 0),
+        Gradient = {Color3.fromRGB(100, 255, 100), Color3.fromRGB(50, 150, 50)}
+    })
+    sitinklib:Notify({Title = "Theme Changed", Content = "Switched to Green Theme!", Delay = 3})
+end)
