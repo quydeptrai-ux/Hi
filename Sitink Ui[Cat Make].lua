@@ -1,3 +1,4 @@
+-- Dịch vụ Roblox
 local UserInputService = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local LocalPlayer = game:GetService("Players").LocalPlayer
@@ -27,33 +28,33 @@ local function CreateGradient(frame, colors)
     return gradient
 end
 
--- MakeDraggable với resize mượt mà
-local function MakeDraggable(topbarobject, object)
-    local Dragging, DragInput, DragStart, StartPosition
+-- MakeDraggable với resize
+local function MakeDraggable(topbar, object)
+    local Dragging, DragInput, DragStart, StartPos
     local Resizing, ResizeStart, StartSize
 
     local function UpdatePos(input)
-        local Delta = input.Position - DragStart
-        local pos = UDim2.new(StartPosition.X.Scale, StartPosition.X.Offset + Delta.X, StartPosition.Y.Scale, StartPosition.Y.Offset + Delta.Y)
+        local delta = input.Position - DragStart
+        local pos = UDim2.new(StartPos.X.Scale, StartPos.X.Offset + delta.X, StartPos.Y.Scale, StartPos.Y.Offset + delta.Y)
         TweenService:Create(object, TweenInfo.new(0.15, Enum.EasingStyle.Sine), {Position = pos}):Play()
     end
 
     local function UpdateSize(input)
-        local Delta = input.Position - ResizeStart
-        local newSize = UDim2.new(0, Clamp(StartSize.X.Offset + Delta.X, 300, 1200), 0, Clamp(StartSize.Y.Offset + Delta.Y, 200, 900))
+        local delta = input.Position - ResizeStart
+        local newSize = UDim2.new(0, Clamp(StartSize.X.Offset + delta.X, 300, 1200), 0, Clamp(StartSize.Y.Offset + delta.Y, 200, 900))
         TweenService:Create(object, TweenInfo.new(0.15, Enum.EasingStyle.Sine), {Size = newSize}):Play()
     end
 
-    topbarobject.InputBegan:Connect(function(input)
+    topbar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             Dragging = true
             DragStart = input.Position
-            StartPosition = object.Position
+            StartPos = object.Position
             input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then Dragging = false end end)
         end
     end)
 
-    topbarobject.InputChanged:Connect(function(input)
+    topbar.InputChanged:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseMovement then DragInput = input end
     end)
 
@@ -1428,6 +1429,7 @@ function sitinklib:Start(config)
                 ProgressConfig.Max = ProgressConfig.Max or 100
                 ProgressConfig.Default = ProgressConfig.Default or 0
                 ProgressConfig.Color = ProgressConfig.Color or self.Theme.Primary
+                local ProgressFunc = {Value = ProgressConfig.Default}
 
                 local ProgressFrame = Instance.new("Frame", TabScroll)
                 ProgressFrame.Size = UDim2.new(1, -10, 0, 50)
@@ -1437,7 +1439,7 @@ function sitinklib:Start(config)
                 AddHoverEffect(ProgressFrame)
 
                 local ProgressTitle = Instance.new("TextLabel", ProgressFrame)
-                ProgressTitle.Text = ProgressConfig.Title
+                                ProgressTitle.Text = ProgressConfig.Title
                 ProgressTitle.Font = Enum.Font.GothamBold
                 ProgressTitle.TextColor3 = self.Theme.Text
                 ProgressTitle.TextSize = 14
@@ -1446,7 +1448,7 @@ function sitinklib:Start(config)
                 ProgressTitle.TextXAlignment = Enum.TextXAlignment.Left
 
                 local ProgressBar = Instance.new("Frame", ProgressFrame)
-                                ProgressBar.Size = UDim2.new(1, -30, 0, 10)
+                ProgressBar.Size = UDim2.new(1, -30, 0, 10)
                 ProgressBar.Position = UDim2.new(0, 15, 1, -20)
                 ProgressBar.BackgroundColor3 = self.Theme.Accent
                 Instance.new("UICorner", ProgressBar).CornerRadius = UDim.new(0, 5)
@@ -1465,9 +1467,9 @@ function sitinklib:Start(config)
                 ProgressValue.Position = UDim2.new(1, -80, 0, 5)
                 ProgressValue.BackgroundTransparency = 1
 
-                local ProgressFunc = {}
                 function ProgressFunc:Set(value)
                     local clamped = Clamp(value, ProgressConfig.Min, ProgressConfig.Max)
+                    ProgressFunc.Value = clamped
                     TweenService:Create(ProgressFill, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {
                         Size = UDim2.new((clamped - ProgressConfig.Min) / (ProgressConfig.Max - ProgressConfig.Min), 0, 1, 0)
                     }):Play()
@@ -1492,7 +1494,7 @@ end
 -- Hàm đổi theme động
 function sitinklib:SetTheme(theme)
     self.Theme = theme or Themes.Default
-    -- Cập nhật lại giao diện (nếu cần mở rộng thêm logic để áp dụng theme mới cho các thành phần đã tạo)
+    -- Cập nhật theme cho các thành phần đã tạo (nếu cần mở rộng thêm logic)
 end
 
 -- Hàm mở/tắt GUI
@@ -1504,7 +1506,7 @@ function sitinklib:Toggle()
 end
 
 -- Hàm thêm tooltip
-local function AddTooltip(element, text)
+function sitinklib:AddTooltip(element, text)
     local Tooltip = Instance.new("TextLabel")
     Tooltip.Size = UDim2.new(0, 0, 0, 20)
     Tooltip.BackgroundColor3 = self.Theme.Secondary
@@ -1523,12 +1525,10 @@ local function AddTooltip(element, text)
         Tooltip.Visible = true
     end)
 
-    element.MouseLeave:Connect(function()
-        Tooltip.Visible = false
-    end)
+    element.MouseLeave:Connect(function() Tooltip.Visible = false end)
 end
 
--- Hàm lưu config (ví dụ đơn giản, có thể mở rộng với DataStore)
+-- Hàm lưu config
 function sitinklib:SaveConfig(filename, config)
     if writefile then
         writefile(filename, game:GetService("HttpService"):JSONEncode(config))
@@ -1556,7 +1556,7 @@ function sitinklib:LoadConfig(filename)
     return nil
 end
 
--- Hàm thêm hiệu ứng fade khi khởi động
+-- Hiệu ứng fade khi khởi động
 function sitinklib:FadeIn()
     local gui = CoreGui:FindFirstChild("SitinkGui")
     if gui then
@@ -1566,20 +1566,39 @@ function sitinklib:FadeIn()
             main.BackgroundTransparency = 1
             for _, child in pairs(main:GetDescendants()) do
                 if child:IsA("GuiObject") then
-                    child.BackgroundTransparency = 1
-                    child.TextTransparency = 1
+                    if child:IsA("TextLabel") or child:IsA("TextButton") then
+                        child.TextTransparency = 1
+                    elseif child:IsA("Frame") or child:IsA("ImageLabel") then
+                        child.BackgroundTransparency = 1
+                    end
                 end
             end
             TweenService:Create(main, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {BackgroundTransparency = 0}):Play()
             for _, child in pairs(main:GetDescendants()) do
                 if child:IsA("GuiObject") then
                     TweenService:Create(child, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {
-                        BackgroundTransparency = child:IsA("Frame") and 0 or 1,
-                        TextTransparency = child:IsA("TextLabel") and 0 or 1
+                        BackgroundTransparency = child:IsA("Frame") and (child.Name == "DropShadow" and 0.5 or 0) or 1,
+                        TextTransparency = (child:IsA("TextLabel") or child:IsA("TextButton")) and 0 or 1
                     }):Play()
                 end
             end
         end
+    end
+end
+
+-- Hàm phá hủy GUI
+function sitinklib:Destroy()
+    local gui = CoreGui:FindFirstChild("SitinkGui")
+    if gui then
+        gui:Destroy()
+    end
+    local notifyGui = CoreGui:FindFirstChild("NotifyGui")
+    if notifyGui then
+        notifyGui:Destroy()
+    end
+    local clickGui = CoreGui:FindFirstChild("ClickGui")
+    if clickGui then
+        clickGui:Destroy()
     end
 end
 
