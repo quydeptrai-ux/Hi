@@ -4,8 +4,9 @@ local LocalPlayer = game:GetService("Players").LocalPlayer
 local Mouse = LocalPlayer:GetMouse()
 local CoreGui = game:GetService("CoreGui")
 local RunService = game:GetService("RunService")
+local SoundService = game:GetService("SoundService")
 
--- Theme mặc định với gradient
+-- Theme mặc định
 local Themes = {
     Default = {
         Primary = Color3.fromRGB(127, 146, 242),
@@ -19,17 +20,14 @@ local Themes = {
 }
 
 -- Hàm tiện ích
-local function Clamp(value, min, max)
-    return math.max(min, math.min(max, value))
-end
-
+local function Clamp(value, min, max) return math.max(min, math.min(max, value)) end
 local function CreateGradient(frame, colors)
     local gradient = Instance.new("UIGradient", frame)
     gradient.Color = ColorSequence.new(colors or Themes.Default.Gradient)
     return gradient
 end
 
--- MakeDraggable với resize mượt mà hơn
+-- MakeDraggable với resize mượt mà
 local function MakeDraggable(topbarobject, object)
     local Dragging, DragInput, DragStart, StartPosition
     local Resizing, ResizeStart, StartSize
@@ -40,47 +38,39 @@ local function MakeDraggable(topbarobject, object)
         TweenService:Create(object, TweenInfo.new(0.15, Enum.EasingStyle.Sine), {Position = pos}):Play()
     end
 
-    topbarobject.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            Dragging = true
-            DragStart = input.Position
-            StartPosition = object.Position
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then Dragging = false end
-            end)
-        end
-    end)
-
-    topbarobject.InputChanged:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
-            DragInput = input
-        end
-    end)
-
-    UserInputService.InputChanged:Connect(function(input)
-        if input == DragInput and Dragging then UpdatePos(input) end
-    end)
-
-    local ResizeFrame = Instance.new("Frame")
-    ResizeFrame.Size = UDim2.new(0, 15, 0, 15)
-    ResizeFrame.Position = UDim2.new(1, -15, 1, -15)
-    ResizeFrame.BackgroundTransparency = 1
-    ResizeFrame.Parent = object
-
     local function UpdateSize(input)
         local Delta = input.Position - ResizeStart
         local newSize = UDim2.new(0, Clamp(StartSize.X.Offset + Delta.X, 300, 1200), 0, Clamp(StartSize.Y.Offset + Delta.Y, 200, 900))
         TweenService:Create(object, TweenInfo.new(0.15, Enum.EasingStyle.Sine), {Size = newSize}):Play()
     end
 
+    topbarobject.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            Dragging = true
+            DragStart = input.Position
+            StartPosition = object.Position
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then Dragging = false end end)
+        end
+    end)
+
+    topbarobject.InputChanged:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseMovement then DragInput = input end
+    end)
+
+    UserInputService.InputChanged:Connect(function(input)
+        if input == DragInput and Dragging then UpdatePos(input) end
+    end)
+
+    local ResizeFrame = Instance.new("Frame", object)
+    ResizeFrame.Size = UDim2.new(0, 15, 0, 15)
+    ResizeFrame.Position = UDim2.new(1, -15, 1, -15)
+    ResizeFrame.BackgroundTransparency = 1
     ResizeFrame.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 then
             Resizing = true
             ResizeStart = input.Position
             StartSize = object.Size
-            input.Changed:Connect(function()
-                if input.UserInputState == Enum.UserInputState.End then Resizing = false end
-            end)
+            input.Changed:Connect(function() if input.UserInputState == Enum.UserInputState.End then Resizing = false end end)
         end
     end)
 
@@ -89,40 +79,36 @@ local function MakeDraggable(topbarobject, object)
     end)
 end
 
--- Hiệu ứng click đẹp hơn
+-- Hiệu ứng click
 local ClickGui = Instance.new("ScreenGui", CoreGui)
 ClickGui.Name = "ClickGui"
 ClickGui.DisplayOrder = 10
 
 local function CircleClick(X, Y)
-    local Circle = Instance.new("ImageLabel")
+    local Circle = Instance.new("ImageLabel", ClickGui)
     Circle.Image = "rbxassetid://266543268"
     Circle.ImageColor3 = Themes.Default.Primary
     Circle.ImageTransparency = 0.6
     Circle.BackgroundTransparency = 1
     Circle.Size = UDim2.new(0, 0, 0, 0)
     Circle.Position = UDim2.new(0, X, 0, Y)
-    Circle.Parent = ClickGui
-
-    local tween = TweenService:Create(Circle, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+    TweenService:Create(Circle, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
         Size = UDim2.new(0, 60, 0, 60),
         ImageTransparency = 1,
         Position = UDim2.new(0, X - 30, 0, Y - 30)
-    })
-    tween:Play()
-    tween.Completed:Connect(function() Circle:Destroy() end)
+    }):Play():Completed:Connect(function() Circle:Destroy() end)
 end
 
 UserInputService.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then CircleClick(Mouse.X, Mouse.Y) end
 end)
 
--- Cập nhật CanvasSize cho ScrollingFrame
+-- Cập nhật CanvasSize
 local function UpdateScrollSize(Scroll)
     local OffsetY = 0
     for _, child in Scroll:GetChildren() do
         if child:IsA("GuiObject") and child ~= Scroll.UIListLayout then
-            OffsetY = OffsetY + child.Size.Y.Offset + Scroll.UIListLayout.Padding.Offset
+            OffsetY = OffsetY + child.Size.Y.Offset + (Scroll.UIListLayout.Padding.Offset or 0)
         end
     end
     Scroll.CanvasSize = UDim2.new(0, 0, 0, OffsetY)
@@ -133,26 +119,22 @@ local function AutoUpdateScroll(Scroll)
     Scroll.ChildRemoved:Connect(function() UpdateScrollSize(Scroll) end)
 end
 
--- Hiệu ứng hover với gradient
+-- Hiệu ứng hover
 local function AddHoverEffect(frame, useGradient)
     local originalColor = frame.BackgroundColor3
     local gradient = frame:FindFirstChildOfClass("UIGradient")
-
     frame.MouseEnter:Connect(function()
         local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Sine)
         if gradient and useGradient then
             TweenService:Create(gradient, tweenInfo, {Offset = Vector2.new(0.5, 0)}):Play()
         else
-            TweenService:Create(frame, tweenInfo, {
-                BackgroundColor3 = Color3.fromRGB(
-                    Clamp(originalColor.R * 255 + 30, 0, 255),
-                    Clamp(originalColor.G * 255 + 30, 0, 255),
-                    Clamp(originalColor.B * 255 + 30, 0, 255)
-                )
-            }):Play()
+            TweenService:Create(frame, tweenInfo, {BackgroundColor3 = Color3.fromRGB(
+                Clamp(originalColor.R * 255 + 30, 0, 255),
+                Clamp(originalColor.G * 255 + 30, 0, 255),
+                Clamp(originalColor.B * 255 + 30, 0, 255)
+            )}):Play()
         end
     end)
-
     frame.MouseLeave:Connect(function()
         local tweenInfo = TweenInfo.new(0.2, Enum.EasingStyle.Sine)
         if gradient and useGradient then
@@ -166,7 +148,7 @@ end
 -- Thư viện chính
 local sitinklib = {Theme = Themes.Default}
 
--- Notify với hiệu ứng gradient
+-- Notify
 function sitinklib:Notify(config)
     local NotifyConfig = config or {}
     NotifyConfig.Title = NotifyConfig.Title or "Notification"
@@ -187,11 +169,9 @@ function sitinklib:Notify(config)
     NotifyLayout.Size = UDim2.new(0, 320, 1, -20)
     NotifyLayout.BackgroundTransparency = 1
 
-    local NotifyFrame = Instance.new("Frame")
+    local NotifyFrame = Instance.new("Frame", NotifyLayout)
     NotifyFrame.Size = UDim2.new(1, 0, 0, 90)
-    NotifyFrame.Position = UDim2.new(0, 0, 1, 0)
     NotifyFrame.BackgroundTransparency = 1
-    NotifyFrame.Parent = NotifyLayout
 
     local NotifyReal = Instance.new("Frame", NotifyFrame)
     NotifyReal.BackgroundColor3 = self.Theme.Secondary
@@ -246,7 +226,6 @@ function sitinklib:Notify(config)
     CloseButton.Position = UDim2.new(1, -35, 0, 5)
     CloseButton.BackgroundTransparency = 1
     CloseButton.Text = ""
-
     local CloseImage = Instance.new("ImageLabel", CloseButton)
     CloseImage.Image = "rbxassetid://18328658828"
     CloseImage.Size = UDim2.new(0, 20, 0, 20)
@@ -254,6 +233,10 @@ function sitinklib:Notify(config)
     CloseImage.AnchorPoint = Vector2.new(0.5, 0.5)
     CloseImage.BackgroundTransparency = 1
 
+    Content:GetPropertyChangedSignal("TextBounds"):Connect(function()
+        Content.Size = UDim2.new(1, -30, 0, Content.TextBounds.Y)
+        NotifyFrame.Size = UDim2.new(1, 0, 0, math.max(Content.TextBounds.Y + 50, 90))
+    end)
     Content.Size = UDim2.new(1, -30, 0, Content.TextBounds.Y)
     NotifyFrame.Size = UDim2.new(1, 0, 0, math.max(Content.TextBounds.Y + 50, 90))
 
@@ -285,7 +268,7 @@ function sitinklib:Notify(config)
     return {Close = Close}
 end
 
--- Start GUI với giao diện xịn hơn
+-- Start GUI
 function sitinklib:Start(config)
     local GuiConfig = config or {}
     GuiConfig.Name = GuiConfig.Name or "Sitink Hub"
@@ -363,7 +346,6 @@ function sitinklib:Start(config)
 
     MakeDraggable(Top, Main)
 
-    -- Tab Layer
     local TabsFrame = Instance.new("Frame", Main)
     TabsFrame.Size = UDim2.new(0, GuiConfig.TabWidth, 1, -60)
     TabsFrame.Position = UDim2.new(0, 10, 0, 50)
@@ -378,10 +360,8 @@ function sitinklib:Start(config)
 
     local UIListLayout = Instance.new("UIListLayout", ScrollTab)
     UIListLayout.Padding = UDim.new(0, 6)
-
     AutoUpdateScroll(ScrollTab)
 
-    -- Info Section
     local Info = Instance.new("Frame", TabsFrame)
     Info.Size = UDim2.new(1, 0, 0, 35)
     Info.BackgroundColor3 = self.Theme.Secondary
@@ -417,7 +397,6 @@ function sitinklib:Start(config)
     NameLabel.BackgroundTransparency = 1
     NameLabel.TextXAlignment = Enum.TextXAlignment.Left
 
-    -- Info Popup
     local InfoPopup = Instance.new("Frame", Main)
     InfoPopup.Size = UDim2.new(0, 0, 0, 0)
     InfoPopup.Position = UDim2.new(0.5, 0, 0.5, 0)
@@ -473,7 +452,6 @@ function sitinklib:Start(config)
         task.delay(0.3, function() InfoPopup.Visible = false end)
     end)
 
-    -- Layers
     local Layers = Instance.new("Frame", Main)
     Layers.Size = UDim2.new(1, -GuiConfig.TabWidth - 20, 1, -60)
     Layers.Position = UDim2.new(0, GuiConfig.TabWidth + 10, 0, 50)
@@ -490,7 +468,6 @@ function sitinklib:Start(config)
     UIPageLayout.EasingStyle = Enum.EasingStyle.Sine
     UIPageLayout.TweenTime = 0.3
 
-    -- Top Layers
     local TopLayers = Instance.new("Frame", Layers)
     TopLayers.Size = UDim2.new(1, 0, 0, 40)
     TopLayers.BackgroundTransparency = 1
@@ -514,7 +491,6 @@ function sitinklib:Start(config)
         GuiConfig.CloseCallBack()
     end)
 
-    -- Tabs
     local Tabs = {}
     local tabCount = 0
 
@@ -605,7 +581,6 @@ function sitinklib:Start(config)
             local Items = {}
             local itemCount = 0
 
-            -- Button
             function Items:Button(config)
                 local ButtonConfig = config or {}
                 ButtonConfig.Title = ButtonConfig.Title or "Button"
@@ -658,10 +633,9 @@ function sitinklib:Start(config)
                 end)
 
                 itemCount = itemCount + 1
-                return {}
+                return {ButtonClick = ButtonClick}
             end
 
-            -- Toggle
             function Items:Toggle(config)
                 local ToggleConfig = config or {}
                 ToggleConfig.Title = ToggleConfig.Title or "Toggle"
@@ -724,14 +698,12 @@ function sitinklib:Start(config)
                 end
 
                 ToggleButton.Activated:Connect(function() UpdateToggle(not ToggleFunc.Value) end)
-
                 function ToggleFunc:Set(value) UpdateToggle(value) end
 
                 itemCount = itemCount + 1
                 return ToggleFunc
             end
 
-            -- Slider
             function Items:Slider(config)
                 local SliderConfig = config or {}
                 SliderConfig.Title = SliderConfig.Title or "Slider"
@@ -837,7 +809,6 @@ function sitinklib:Start(config)
                 return SliderFunc
             end
 
-            -- Dropdown (Làm lại hoàn toàn)
             function Items:Dropdown(config)
                 local DropdownConfig = config or {}
                 DropdownConfig.Title = DropdownConfig.Title or "Dropdown"
@@ -985,7 +956,6 @@ function sitinklib:Start(config)
                 return DropdownFunc
             end
 
-            -- Dropdown Multi (Tính năng mới)
             function Items:DropdownMulti(config)
                 local DropdownConfig = config or {}
                 DropdownConfig.Title = DropdownConfig.Title or "Multi Dropdown"
@@ -1140,7 +1110,6 @@ function sitinklib:Start(config)
                 return DropdownFunc
             end
 
-            -- TextInput
             function Items:TextInput(config)
                 local TextInputConfig = config or {}
                 TextInputConfig.Title = TextInputConfig.Title or "Text Input"
@@ -1202,7 +1171,6 @@ function sitinklib:Start(config)
                 return TextInputFunc
             end
 
-            -- Label
             function Items:Label(config)
                 local LabelConfig = config or {}
                 LabelConfig.Text = LabelConfig.Text or "Label"
@@ -1230,7 +1198,6 @@ function sitinklib:Start(config)
                 return LabelFunc
             end
 
-            -- ColorPicker
             function Items:ColorPicker(config)
                 local ColorPickerConfig = config or {}
                 ColorPickerConfig.Title = ColorPickerConfig.Title or "Color Picker"
@@ -1394,7 +1361,6 @@ function sitinklib:Start(config)
                 return ColorPickerFunc
             end
 
-            -- Keybind
             function Items:Keybind(config)
                 local KeybindConfig = config or {}
                 KeybindConfig.Title = KeybindConfig.Title or "Keybind"
@@ -1455,7 +1421,6 @@ function sitinklib:Start(config)
                 return KeybindFunc
             end
 
-            -- ProgressBar
             function Items:ProgressBar(config)
                 local ProgressConfig = config or {}
                 ProgressConfig.Title = ProgressConfig.Title or "Progress"
@@ -1481,7 +1446,7 @@ function sitinklib:Start(config)
                 ProgressTitle.TextXAlignment = Enum.TextXAlignment.Left
 
                 local ProgressBar = Instance.new("Frame", ProgressFrame)
-                ProgressBar.Size = UDim2.new(1, -30, 0, 10)
+                                ProgressBar.Size = UDim2.new(1, -30, 0, 10)
                 ProgressBar.Position = UDim2.new(0, 15, 1, -20)
                 ProgressBar.BackgroundColor3 = self.Theme.Accent
                 Instance.new("UICorner", ProgressBar).CornerRadius = UDim.new(0, 5)
@@ -1524,10 +1489,10 @@ function sitinklib:Start(config)
     return Tabs
 end
 
--- Thêm hàm đổi theme động
+-- Hàm đổi theme động
 function sitinklib:SetTheme(theme)
     self.Theme = theme or Themes.Default
-    -- Cập nhật lại giao diện nếu cần (có thể thêm logic để áp dụng theme cho các thành phần đã tạo)
+    -- Cập nhật lại giao diện (nếu cần mở rộng thêm logic để áp dụng theme mới cho các thành phần đã tạo)
 end
 
 -- Hàm mở/tắt GUI
@@ -1550,6 +1515,7 @@ local function AddTooltip(element, text)
     Tooltip.Visible = false
     Tooltip.Parent = CoreGui:FindFirstChild("SitinkGui") or element.Parent.Parent
     Instance.new("UICorner", Tooltip).CornerRadius = UDim.new(0, 4)
+    CreateGradient(Tooltip)
 
     element.MouseEnter:Connect(function()
         Tooltip.Position = UDim2.new(0, Mouse.X + 10, 0, Mouse.Y + 10)
@@ -1560,6 +1526,61 @@ local function AddTooltip(element, text)
     element.MouseLeave:Connect(function()
         Tooltip.Visible = false
     end)
+end
+
+-- Hàm lưu config (ví dụ đơn giản, có thể mở rộng với DataStore)
+function sitinklib:SaveConfig(filename, config)
+    if writefile then
+        writefile(filename, game:GetService("HttpService"):JSONEncode(config))
+        self:Notify({Title = "Config Saved", Content = "Saved to " .. filename, Delay = 3})
+    else
+        warn("writefile not supported in this environment")
+    end
+end
+
+-- Hàm tải config
+function sitinklib:LoadConfig(filename)
+    if readfile and isfile and isfile(filename) then
+        local success, decoded = pcall(function()
+            return game:GetService("HttpService"):JSONDecode(readfile(filename))
+        end)
+        if success then
+            self:Notify({Title = "Config Loaded", Content = "Loaded from " .. filename, Delay = 3})
+            return decoded
+        else
+            warn("Failed to decode config file")
+        end
+    else
+        warn("readfile/isfile not supported or file not found")
+    end
+    return nil
+end
+
+-- Hàm thêm hiệu ứng fade khi khởi động
+function sitinklib:FadeIn()
+    local gui = CoreGui:FindFirstChild("SitinkGui")
+    if gui then
+        gui.Enabled = true
+        local main = gui:FindFirstChild("Frame")
+        if main then
+            main.BackgroundTransparency = 1
+            for _, child in pairs(main:GetDescendants()) do
+                if child:IsA("GuiObject") then
+                    child.BackgroundTransparency = 1
+                    child.TextTransparency = 1
+                end
+            end
+            TweenService:Create(main, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {BackgroundTransparency = 0}):Play()
+            for _, child in pairs(main:GetDescendants()) do
+                if child:IsA("GuiObject") then
+                    TweenService:Create(child, TweenInfo.new(0.5, Enum.EasingStyle.Sine), {
+                        BackgroundTransparency = child:IsA("Frame") and 0 or 1,
+                        TextTransparency = child:IsA("TextLabel") and 0 or 1
+                    }):Play()
+                end
+            end
+        end
+    end
 end
 
 return sitinklib
